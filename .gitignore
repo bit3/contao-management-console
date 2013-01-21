@@ -1,1 +1,9 @@
+# ide project files
 .idea
+
+# vendor libs
+vendor
+
+# composer files
+composer.phar
+composer.lock
