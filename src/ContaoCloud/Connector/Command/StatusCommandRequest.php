@@ -7,11 +7,11 @@ use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
 use ContaoCloud\Connector\Settings;
 
-class StatusRequestCommand implements RequestCommand
+class StatusCommandRequest implements CommandRequest
 {
 	public static function create($config)
 	{
-		return new StatusRequestCommand($config);
+		return new StatusCommandRequest($config);
 	}
 
 	protected function __construct($config)
@@ -192,6 +192,6 @@ class StatusRequestCommand implements RequestCommand
 			}
 		}
 
-		return new StatusResponseCommand($status, $errors);
+		return new StatusCommandResponse($status, $errors);
 	}
 }

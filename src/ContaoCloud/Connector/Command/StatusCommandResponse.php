@@ -2,7 +2,7 @@
 
 namespace ContaoCloud\Connector\Command;
 
-class StatusResponseCommand implements ResponseCommand
+class StatusCommandResponse implements CommandResponse
 {
 	protected $status;
 

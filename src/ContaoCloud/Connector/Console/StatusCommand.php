@@ -7,7 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoCloud\Connector\Command\StatusRequestCommand;
+use ContaoCloud\Connector\Command\StatusCommandRequest;
 
 class StatusCommand extends AbstractCommand
 {
@@ -24,7 +24,7 @@ class StatusCommand extends AbstractCommand
 	{
 		$settings = $this->createSettings($input, $output);
 
-		$request = StatusRequestCommand::create(null);
+		$request = StatusCommandRequest::create(null);
 		$response = $request->execute($settings);
 
 		$output->getFormatter()->setStyle('disabled', new OutputFormatterStyle('magenta'));

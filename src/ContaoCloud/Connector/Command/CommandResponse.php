@@ -2,7 +2,7 @@
 
 namespace ContaoCloud\Connector\Command;
 
-interface ResponseCommand {
+interface CommandResponse {
 	/**
 	 * @return mixed
 	 */

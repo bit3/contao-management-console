@@ -4,18 +4,18 @@ namespace ContaoCloud\Connector\Command;
 
 use ContaoCloud\Connector\Settings;
 
-interface RequestCommand {
+interface CommandRequest {
 	/**
 	 * @param $request
 	 *
-	 * @return RequestCommand
+	 * @return CommandRequest
 	 */
 	public static function create($config);
 
 	/**
 	 * @param \ContaoCloud\Connector\Settings $settings
 	 *
-	 * @return ResponseCommand
+	 * @return CommandResponse
 	 */
 	public function execute(Settings $settings);
 }
