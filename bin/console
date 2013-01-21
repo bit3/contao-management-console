@@ -4,6 +4,8 @@
 require(__DIR__ . '/../vendor/autoload.php');
 
 use Symfony\Component\Console\Application;
+use ContaoCloud\Connector\Console\StatusCommand;
 
 $application = new Application();
+$application->add(new StatusCommand);
 $application->run();
