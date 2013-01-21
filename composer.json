@@ -1,0 +1,41 @@
+{
+	"name":"contao-cloud/connector",
+	"description":"The contao cloud instance connector.",
+	"version":"1.0.0-dev",
+	"homepage":"http://contao-cloud.com",
+	"license":"",
+	"authors":[
+		{
+			"name":"Tristan Lins",
+			"email":"tristan.lins@bit.de",
+			"homepage":"http://bit3.de",
+			"role":"Developer"
+		}
+	],
+	"support": {
+		"email":"info@bit3.de",
+		"issues":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/issues",
+		"wiki":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/wikis/index",
+		"source":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/tree/master"
+	},
+	"require": {
+        "filicious/filicious":"@dev",
+		"symfony/console":"2.1.*",
+		"phpseclib/phpseclib":"0.3.*",
+		"monolog/monolog":"1.3.*"
+	},
+	"require-dev": {
+		"phpunit/phpunit":"3.*"
+	},
+	"autoload":{
+		"psr-0":{
+			"ContaoCloud\\Connector":"src"
+		}
+	},
+	"repositories":[
+		{
+			"type":"vcs",
+			"url":"https://github.com/Filicious/FiliciousCore"
+		}
+	]
+}
