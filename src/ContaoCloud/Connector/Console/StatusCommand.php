@@ -8,6 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use ContaoCloud\Connector\Command\StatusCommandRequest;
+use ContaoCloud\Connector\CommandRequestFactory;
 
 class StatusCommand extends AbstractCommand
 {
@@ -24,11 +25,14 @@ class StatusCommand extends AbstractCommand
 	{
 		$settings = $this->createSettings($input, $output);
 
-		$request = StatusCommandRequest::create(null);
+		$factory = new CommandRequestFactory();
+		/** @var \ContaoCloud\Connector\Command\StatusCommandRequest $request */
+		$request = $factory->create($settings, 'status', null);
+		/** @var \ContaoCloud\Connector\Command\StatusCommandResponse $response */
 		$response = $request->execute($settings);
 
-		$output->getFormatter()->setStyle('disabled', new OutputFormatterStyle('magenta'));
-		$output->getFormatter()->setStyle('enabled', new OutputFormatterStyle('blue'));
+		$output->getFormatter()->setStyle('disabled', new OutputFormatterStyle('yellow'));
+		$output->getFormatter()->setStyle('enabled', new OutputFormatterStyle(null));
 
 		$output->getFormatter()->setStyle('alpha', new OutputFormatterStyle('magenta'));
 		$output->getFormatter()->setStyle('beta', new OutputFormatterStyle('yellow'));
@@ -47,7 +51,7 @@ class StatusCommand extends AbstractCommand
 			$output->writeln('');
 		}
 
-		$status = $response->data();
+		$status = $response->getStatus();
 
 		$output->writeln('<info>Version</info>');
 		$output->write('  - ' . $status->version . '.' . $status->build);

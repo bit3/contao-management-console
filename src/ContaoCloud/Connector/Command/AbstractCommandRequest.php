@@ -188,4 +188,26 @@ abstract class AbstractCommandRequest implements CommandRequest {
 
 		return null;
 	}
+
+	protected function saveUnserializeKeys(&$object)
+	{
+		foreach ($object as $key => $value) {
+			$temp = @unserialize($value);
+
+			if (is_array($temp)) {
+				$object->$key = $temp;
+			}
+		}
+	}
+
+	protected function saveUnserialize($value)
+	{
+		$temp = @unserialize($value);
+
+		if (is_array($temp)) {
+			return $temp;
+		}
+
+		return $value;
+	}
 }

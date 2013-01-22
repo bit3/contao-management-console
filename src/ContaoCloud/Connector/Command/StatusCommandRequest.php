@@ -123,9 +123,13 @@ class StatusCommandRequest extends AbstractCommandRequest
 						$this->errors[] = 'The table tl_user does not exists, could not find users!';
 					}
 					else {
-						$status->users = $this->dbConnection
-							->query('SELECT id,username,name,email,admin,disable AS disabled,locked,currentLogin FROM tl_user ORDER BY username', PDO::FETCH_OBJ)
-							->fetchAll();
+						$status->users = $this->dbConnection->query(
+							'SELECT id,username,name,email,admin,locked,currentLogin,
+							     IF(disable OR start!="" AND start>UNIX_TIMESTAMP() OR stop!="" AND stop<UNIX_TIMESTAMP(), 1, "") AS disabled
+							 FROM tl_user
+							 ORDER BY username',
+							PDO::FETCH_OBJ
+						)->fetchAll();
 					}
 				}
 			}

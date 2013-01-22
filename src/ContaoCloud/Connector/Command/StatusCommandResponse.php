@@ -14,6 +14,11 @@ class StatusCommandResponse implements CommandResponse
 		$this->errors = $errors;
 	}
 
+	public function getStatus()
+	{
+		return $this->status;
+	}
+
 	public function data()
 	{
 		return $this->status;
