@@ -1,6 +1,6 @@
 <?php
 
-namespace ContaoCloud\Connector;
+namespace Contao\Connector;
 
 class Settings {
 	/**

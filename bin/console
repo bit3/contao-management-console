@@ -4,8 +4,8 @@
 require(__DIR__ . '/../vendor/autoload.php');
 
 use Symfony\Component\Console\Application;
-use ContaoCloud\Connector\Console\StatusCommand;
-use ContaoCloud\Connector\Console\UserinfoCommand;
+use Contao\Connector\Console\StatusCommand;
+use Contao\Connector\Console\UserinfoCommand;
 
 $application = new Application();
 $application->add(new StatusCommand);

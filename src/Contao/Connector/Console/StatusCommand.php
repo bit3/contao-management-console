@@ -1,14 +1,14 @@
 <?php
 
-namespace ContaoCloud\Connector\Console;
+namespace Contao\Connector\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoCloud\Connector\Command\StatusCommandRequest;
-use ContaoCloud\Connector\CommandRequestFactory;
+use Contao\Connector\Command\StatusCommands;
+use Contao\Connector\EndpointFactory;
 
 class StatusCommand extends AbstractCommand
 {
@@ -17,41 +17,53 @@ class StatusCommand extends AbstractCommand
 		parent::configure();
 
 		$this
-			->setName('status')
-			->setDescription('Fetch status of the installation.');
+			->setName('status:summary')
+			->setDescription('Fetch status summary of the installation.');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$settings = $this->createSettings($input, $output);
+		$endpoint = $this->createEndpoint($settings);
 
-		$factory = new CommandRequestFactory();
-		/** @var \ContaoCloud\Connector\Command\StatusCommandRequest $request */
-		$request = $factory->create($settings, 'status', null);
-		/** @var \ContaoCloud\Connector\Command\StatusCommandResponse $response */
-		$response = $request->execute($settings);
+		$result = $endpoint->status->summary();
 
-		$output->getFormatter()->setStyle('disabled', new OutputFormatterStyle('yellow'));
-		$output->getFormatter()->setStyle('enabled', new OutputFormatterStyle(null));
+		$output
+			->getFormatter()
+			->setStyle('disabled', new OutputFormatterStyle('yellow'));
+		$output
+			->getFormatter()
+			->setStyle('enabled', new OutputFormatterStyle(null));
 
-		$output->getFormatter()->setStyle('alpha', new OutputFormatterStyle('magenta'));
-		$output->getFormatter()->setStyle('beta', new OutputFormatterStyle('yellow'));
-		$output->getFormatter()->setStyle('rc', new OutputFormatterStyle('blue'));
-		$output->getFormatter()->setStyle('stable', new OutputFormatterStyle('green'));
-		$output->getFormatter()->setStyle('noupdate', new OutputFormatterStyle('cyan'));
+		$output
+			->getFormatter()
+			->setStyle('alpha', new OutputFormatterStyle('magenta'));
+		$output
+			->getFormatter()
+			->setStyle('beta', new OutputFormatterStyle('yellow'));
+		$output
+			->getFormatter()
+			->setStyle('rc', new OutputFormatterStyle('blue'));
+		$output
+			->getFormatter()
+			->setStyle('stable', new OutputFormatterStyle('green'));
+		$output
+			->getFormatter()
+			->setStyle('noupdate', new OutputFormatterStyle('cyan'));
 
-		$output->getFormatter()->setStyle('admin', new OutputFormatterStyle('blue'));
-		$output->getFormatter()->setStyle('disabled', new OutputFormatterStyle('yellow'));
-		$output->getFormatter()->setStyle('locked', new OutputFormatterStyle('magenta'));
+		$output
+			->getFormatter()
+			->setStyle('admin', new OutputFormatterStyle('blue'));
+		$output
+			->getFormatter()
+			->setStyle('disabled', new OutputFormatterStyle('yellow'));
+		$output
+			->getFormatter()
+			->setStyle('locked', new OutputFormatterStyle('magenta'));
 
-		if (count($response->errors())) {
-			foreach ($response->errors() as $error) {
-				$output->writeln('<error>' . $error . '</error>');
-			}
-			$output->writeln('');
-		}
+		$this->outputErrors($result, $output);
 
-		$status = $response->getStatus();
+		$status = $result->status;
 
 		$output->writeln('<info>Version</info>');
 		$output->write('  - ' . $status->version . '.' . $status->build);

@@ -1,14 +1,14 @@
 <?php
 
-namespace ContaoCloud\Connector\Console;
+namespace Contao\Connector\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoCloud\Connector\Command\UserInfoCommandRequest;
-use ContaoCloud\Connector\CommandRequestFactory;
+use Contao\Connector\Command\UserCommands;
+use Contao\Connector\EndpointFactory;
 
 class UserinfoCommand extends AbstractCommand
 {
@@ -17,19 +17,16 @@ class UserinfoCommand extends AbstractCommand
 		parent::configure();
 
 		$this
-			->setName('userinfo')
+			->setName('user:info')
 			->setDescription('Fetch users and groups from the installation.');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
 		$settings = $this->createSettings($input, $output);
+		$endpoint = $this->createEndpoint($settings);
 
-		$factory = new CommandRequestFactory();
-		/** @var \ContaoCloud\Connector\Command\UserInfoCommandRequest $request */
-		$request = $factory->create($settings, 'user:info', null);
-		/** @var \ContaoCloud\Connector\Command\UserInfoCommandResponse $response */
-		$response = $request->execute($settings);
+		$result = $endpoint->user->info();
 
 		$output
 			->getFormatter()
@@ -41,15 +38,10 @@ class UserinfoCommand extends AbstractCommand
 			->getFormatter()
 			->setStyle('locked', new OutputFormatterStyle('magenta'));
 
-		if (count($response->errors())) {
-			foreach ($response->errors() as $error) {
-				$output->writeln('<error>' . $error . '</error>');
-			}
-			$output->writeln('');
-		}
+		$this->outputErrors($result, $output);
 
-		$users  = $response->getUsers();
-		$groups = $response->getGroups();
+		$users  = $result->users;
+		$groups = $result->groups;
 
 		$output->writeln('<info>Users</info>');
 		$paddings = $this->calculatePadding($users, array('id', 'username', 'name'));
@@ -77,7 +69,7 @@ class UserinfoCommand extends AbstractCommand
 			if (!$user->admin && count($user->groups)) {
 				$groupNames = array();
 				foreach ($user->groups as $groupId) {
-					$groupNames[] = $groups[$groupId]->name;
+					$groupNames[] = $groups->$groupId->name;
 				}
 				$output->writeln(str_pad('', $paddings['id']+6) . ' member of [' . implode(', ', $groupNames) . ']');
 			}

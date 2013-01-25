@@ -1,22 +1,13 @@
 <?php
 
-namespace ContaoCloud\Connector\Command;
+namespace Contao\Connector\Command;
 
 use PDO;
-use ContaoCloud\Connector\Settings;
+use Contao\Connector\Settings;
 
-class StatusCommandRequest extends AbstractCommandRequest
+class StatusCommands extends AbstractCommands
 {
-	public static function create($config)
-	{
-		return new StatusCommandRequest($config);
-	}
-
-	protected function __construct($config)
-	{
-	}
-
-	public function execute(Settings $settings)
+	public function summary()
 	{
 		$status = (object) array(
 			'version'            => -1,
@@ -24,11 +15,11 @@ class StatusCommandRequest extends AbstractCommandRequest
 			'lts'                => false,
 			'modules'            => array(),
 			'disabledModules'    => array(),
-			'extensions'         => array(),
+			'extensions'         => new \stdClass(),
 			'users'              => array()
 		);
 
-		if ($this->prepareFilesystemAccess($settings)) {
+		if ($this->prepareFilesystemAccess()) {
 			/* ***** Read constants like VERSION, BUILD and LONG_TERM_SUPPORT ******************************************* */
 			/* Contao 3+ */
 			$constantsFile = $this->contaoInstallation->getFile('system/config/constants.php');
@@ -40,7 +31,7 @@ class StatusCommandRequest extends AbstractCommandRequest
 			if (!$constantsFile->exists()) {
 				$this->errors[] = sprintf(
 					'system/[config/]constants.php is missing, maybe %s is not a contao installation?!',
-					$settings->getPath()
+					$this->settings->getPath()
 				);
 			}
 			else {
@@ -62,7 +53,7 @@ class StatusCommandRequest extends AbstractCommandRequest
 			if (!$modulesDir->isDirectory()) {
 				$this->errors[] = sprintf(
 					'system/modules/ is missing, maybe %s is not a contao installation?!',
-					$settings->getPath()
+					$this->settings->getPath()
 				);
 			}
 			else {
@@ -77,21 +68,22 @@ class StatusCommandRequest extends AbstractCommandRequest
 			}
 
 			/* ***** Read localconfig *********************************************************************************** */
-			if ($this->prepareLocalconfig($settings)) {
+			if ($this->prepareLocalconfig()) {
 				/* Read incompatible versions */
 				$inactiveModules = $this->searchConfigEntry('inactiveModules');
 				if ($inactiveModules) {
-					$status->disabledModules = unserialize($inactiveModules);
+					$status->disabledModules = array_values(unserialize($inactiveModules));
 					natcasesort($status->disabledModules);
 				}
 
-				if ($this->prepareDatabaseConnection($settings)) {
+				if ($this->prepareDatabaseConnection()) {
 					/* Read installed extension versions */
 					$tablesStatement = $this->dbConnection->query('SHOW TABLES LIKE "tl_repository_installs";', PDO::FETCH_NUM);
 					if (!$tablesStatement->rowCount()) {
 						$this->errors[] = 'The table tl_repository_installs does not exists, could not detect versions of installed extensions!';
 					}
 					else {
+						$extensions = array();
 						$installs = $this->dbConnection->query('SELECT * FROM tl_repository_installs', PDO::FETCH_OBJ);
 						foreach ($installs as $install) {
 							$major = intval($install->version / 10000000);
@@ -99,7 +91,7 @@ class StatusCommandRequest extends AbstractCommandRequest
 							$release = intval($install->version / 10) % 1000;
 							$stability = $install->version % 10;
 
-							$status->extensions[$install->extension] = (object) array(
+							$extensions[$install->extension] = (object) array(
 								'name'        => $install->extension,
 								'version'     => $major . '.' . $minor . '.' . $release . '.' . $install->build,
 								'major'       => $major,
@@ -114,7 +106,8 @@ class StatusCommandRequest extends AbstractCommandRequest
 								'protected'   => (bool) $install->updprot,
 							);
 						}
-						uksort($status->extensions, 'strnatcasecmp');
+						uksort($extensions, 'strnatcasecmp');
+						$status->extensions = (object) $extensions;
 					}
 
 					/* Read users */
@@ -135,6 +128,9 @@ class StatusCommandRequest extends AbstractCommandRequest
 			}
 		}
 
-		return new StatusCommandResponse($status, $this->errors);
+		return (object) array(
+			'status' => $status,
+			'errors' => $this->errors
+		);
 	}
 }

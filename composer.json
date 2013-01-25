@@ -19,6 +19,7 @@
 		"source":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/tree/master"
 	},
 	"require": {
+        "bit3/remote-objects":"@dev",
         "filicious/filicious":"@dev",
 		"symfony/console":"2.1.*",
 		"phpseclib/phpseclib":"0.3.*",
@@ -29,13 +30,17 @@
 	},
 	"autoload":{
 		"psr-0":{
-			"ContaoCloud\\Connector":"src"
+			"Contao\\Connector":"src"
 		}
 	},
 	"repositories":[
 		{
 			"type":"vcs",
 			"url":"https://github.com/Filicious/FiliciousCore"
+		},
+		{
+			"type":"vcs",
+			"url":"https://github.com/bit3/php-RemoteObjects"
 		}
 	]
 }

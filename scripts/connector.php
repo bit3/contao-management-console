@@ -1,8 +1,14 @@
 <?php
 
-use ContaoCloud\Connector\Settings;
-use ContaoCloud\Connector\Encryption;
-use ContaoCloud\Connector\CommandRequestFactory;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use RemoteObjects\Server;
+use RemoteObjects\Transport\HttpServer;
+use RemoteObjects\Encode\JsonRpc20Encoder;
+use RemoteObjects\Encode\RsaEncoder;
+use Contao\Connector\Settings;
+use Contao\Connector\Encryption;
+use Contao\Connector\EndpointFactory;
 
 class connector
 {
@@ -13,59 +19,77 @@ class connector
 
 	public function run()
 	{
+		ob_start();
+		error_reporting(E_ALL ^ E_NOTICE);
+
+		$logger = new Logger('contao-connector');
+		$logger->pushHandler(
+			new StreamHandler(
+				CONTAO_CONNECTOR_LOG,
+				CONTAO_CONNECTOR_LOG_LEVEL
+			)
+		);
+
 		// change into parent directory
-		$path = dirname(__FILE__);
+		$path       = dirname(__FILE__);
 		$parentPath = dirname($path);
 		chdir($parentPath);
 
 		$settings = new Settings();
 
-		if (defined('CLOUD_CONTAO_PATH')) {
-			$settings->setPath(CLOUD_CONTAO_PATH);
+		if (defined('CONTAO_CONNECTOR_CONTAO_PATH')) {
+			$settings->setPath(CONTAO_CONNECTOR_CONTAO_PATH);
 		}
-		if (defined('CLOUD_RSA_LOCAL_PRIVATE_KEY')) {
-			$settings->setRsaLocalPrivateKey(CLOUD_RSA_LOCAL_PRIVATE_KEY);
+		if (defined('CONTAO_CONNECTOR_RSA_LOCAL_PRIVATE_KEY')) {
+			$settings->setRsaLocalPrivateKey(CONTAO_CONNECTOR_RSA_LOCAL_PRIVATE_KEY);
 		}
-		if (defined('CLOUD_RSA_REMOTE_PUBLIC_KEY')) {
-			$settings->setRsaRemotePublicKey(CLOUD_RSA_REMOTE_PUBLIC_KEY);
+		if (defined('CONTAO_CONNECTOR_RSA_REMOTE_PUBLIC_KEY')) {
+			$settings->setRsaRemotePublicKey(CONTAO_CONNECTOR_RSA_REMOTE_PUBLIC_KEY);
 		}
 
-		// get request data
-		$request = file_get_contents('php://input');
+		$factory  = new EndpointFactory();
+		$endpoint = $factory->createEndpoint($settings);
 
-		$encryption = new Encryption($settings);
+		$transport = new HttpServer('application/json');
+		$transport->setLogger($logger);
 
-		// decrypt request data
+		$encoder = new JsonRpc20Encoder();
+		$encoder->setLogger($logger);
+
+		if ($settings->isEncryptionEnabled()) {
+			$encoder = new RsaEncoder(
+				$encoder,
+				$settings->getRsaRemotePublicKey(),
+				$settings->getRsaLocalPrivateKey()
+			);
+		}
+
+		$server = new Server(
+			$transport,
+			$encoder,
+			$endpoint
+		);
+
 		try {
-			$request = $encryption->decrypt($request);
-		} catch(Exception $e) {
-			header("HTTP/1.0 403 Forbidden");
-			exit;
+			$server->handle();
 		}
-
-		// decode the request
-		$request = json_decode($request);
-
-		if (!is_object($request) || !isset($request->command)) {
-			header("HTTP/1.0 406 Not Acceptable");
-			exit;
+		catch (Exception $e) {
+			if ($logger->isHandling(Logger::ERROR)) {
+				$logger->addError(
+					$e->getMessage()
+				);
+			}
+			ob_start();
+			while (ob_end_clean()) {
+			}
+			header('HTTP/1.0 500 Internal Server Error');
+			header("Status: 500 Internal Server Error");
+			header('Content-Type: text/plain; charset=utf-8');
+			echo '500 Internal Server Error';
 		}
-
-		$factory = new CommandRequestFactory();
-		$commandRequest = $factory->create($settings, $request->command, $request->config);
-		$commandResponse = $commandRequest->execute($settings);
-
-		$response = serialize($commandResponse);
-
-		// encrypt response
-		$response = $encryption->encrypt($response);
-
-		while(ob_end_clean());
-
-		header('Content-Type: application/octet-stream');
-		echo $response;
 		exit;
 	}
 }
 
-connector::getInstance()->run();
+connector::getInstance()
+	->run();

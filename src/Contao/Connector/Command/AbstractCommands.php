@@ -1,20 +1,25 @@
 <?php
 
-namespace ContaoCloud\Connector\Command;
+namespace Contao\Connector\Command;
 
 use Exception;
 use PDO;
 use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
-use ContaoCloud\Connector\Settings;
+use Contao\Connector\Settings;
 
-abstract class AbstractCommandRequest implements CommandRequest {
+abstract class AbstractCommands {
 	/**
 	 * List of errors.
 	 *
 	 * @var array
 	 */
 	protected $errors = array();
+
+	/**
+	 * @var Settings
+	 */
+	protected $settings;
 
 	/**
 	 * The filesystem to the contao installation path.
@@ -44,36 +49,41 @@ abstract class AbstractCommandRequest implements CommandRequest {
 	 */
 	protected $dbConnection = null;
 
-	protected function prepareFilesystemAccess(Settings $settings)
+	function __construct($settings)
+	{
+		$this->settings = $settings;
+	}
+
+	protected function prepareFilesystemAccess()
 	{
 		if ($this->contaoInstallation !== null) {
 			return true;
 		}
 
-		if (!is_dir($settings->getPath())) {
+		if (!is_dir($this->settings->getPath())) {
 			$this->errors[] = sprintf(
 				'The path %s does not exists.',
-				$settings->getPath()
+				$this->settings->getPath()
 			);
 			return false;
 		}
 
-		$this->contaoInstallation = new Filesystem(new LocalAdapter($settings->getPath()));
+		$this->contaoInstallation = new Filesystem(new LocalAdapter($this->settings->getPath()));
 		return true;
 	}
 
-	protected function prepareLocalconfig(Settings $settings)
+	protected function prepareLocalconfig()
 	{
 		if ($this->localconfig !== null) {
 			return true;
 		}
 
-		if ($this->prepareFilesystemAccess($settings)) {
+		if ($this->prepareFilesystemAccess()) {
 			$localconfigFile = $this->contaoInstallation->getFile('system/config/localconfig.php');
 			if (!$localconfigFile->exists()) {
 				$errors[] = sprintf(
 					'system/config/localconfig.php is missing, maybe %s is not a contao installation or not configured yet?!',
-					$settings->getPath()
+					$this->settings->getPath()
 				);
 			}
 			else {
@@ -85,13 +95,13 @@ abstract class AbstractCommandRequest implements CommandRequest {
 		return false;
 	}
 
-	protected function prepareDatabaseSettings(Settings $settings)
+	protected function prepareDatabaseSettings()
 	{
 		if ($this->dbSettings !== null) {
 			return true;
 		}
 
-		if ($this->prepareLocalconfig($settings)) {
+		if ($this->prepareLocalconfig()) {
 			/* Read db settings */
 			$dbSettins = new \stdClass();
 
@@ -117,13 +127,13 @@ abstract class AbstractCommandRequest implements CommandRequest {
 		return false;
 	}
 
-	protected function prepareDatabaseConnection(Settings $settings)
+	protected function prepareDatabaseConnection()
 	{
 		if ($this->dbConnection !== null) {
 			return true;
 		}
 
-		if ($this->prepareDatabaseSettings($settings)) {
+		if ($this->prepareDatabaseSettings()) {
 			$username = $this->dbSettings->dbUser;
 			$password = isset($this->dbSettings->dbPass) ? $this->dbSettings->dbPass : '';
 
@@ -186,6 +196,38 @@ abstract class AbstractCommandRequest implements CommandRequest {
 			return $value;
 		}
 
+		return null;
+	}
+
+	protected function getContaoVersion()
+	{
+		if ($this->prepareFilesystemAccess()) {
+			/* ***** Read constants like VERSION, BUILD and LONG_TERM_SUPPORT ******************************************* */
+			/* Contao 3+ */
+			$constantsFile = $this->contaoInstallation->getFile('system/config/constants.php');
+			/* Contao 2+ */
+			if (!$constantsFile->exists()) {
+				$constantsFile = $this->contaoInstallation->getFile('system/constants.php');
+			}
+
+			if ($constantsFile->exists()) {
+				$constants = $constantsFile->getContents();
+
+				$version = '';
+				$build = '';
+
+				if (preg_match('#define\(\s*["\']VERSION["\']\s*,\s*["\']([^"\']+)["\']\s*\)#', $constants, $match)) {
+					$version = $match[1];
+				}
+				if (preg_match('#define\(\s*["\']BUILD["\']\s*,\s*["\']([^"\']+)["\']\s*\)#', $constants, $match)) {
+					$build = $match[1];
+				}
+
+				if ($version && $build) {
+					return $version . '.' . $build;
+				}
+			}
+		}
 		return null;
 	}
 

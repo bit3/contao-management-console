@@ -32,11 +32,9 @@ class bundler
 		self::addFiles($iterator, $interfaces, $classes, $others);
 
 		// add some vendor files
-		$filiciousDir = $fs->getFile('vendor/filicious/filicious/src');
-		$iterator     = $filiciousDir->getIterator(
-			File::LIST_RECURSIVE
-		);
-		self::addFiles($iterator, $interfaces, $classes, $others);
+		self::addDirectories($fs, 'vendor/bit3/remote-objects/src');
+		self::addDirectories($fs, 'vendor/filicious/filicious/src');
+		self::addDirectories($fs, 'vendor/monolog/monolog/src');
 
 		// sort files
 		$interfaces = self::sortFiles($interfaces);
@@ -81,6 +79,15 @@ EOF
 		$parts = explode('\\', $className);
 		$parts = array_filter($parts);
 		return implode('\\', $parts);
+	}
+
+	protected static function addDirectories(Filesystem $fs, $path)
+	{
+		$dir = $fs->getFile($path);
+		$iterator     = $dir->getIterator(
+			File::LIST_RECURSIVE
+		);
+		self::addFiles($iterator, $interfaces, $classes, $others);
 	}
 
 	/**
