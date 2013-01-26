@@ -21,13 +21,13 @@ abstract class AbstractCommand extends Command
 		);
 		$this->addOption(
 			'private-key',
-			'k',
+			'K',
 			InputOption::VALUE_OPTIONAL,
 			'Path to the private key file.'
 		);
 		$this->addOption(
 			'public-key',
-			'p',
+			'P',
 			InputOption::VALUE_OPTIONAL,
 			'Path to the public key file.'
 		);
@@ -41,15 +41,17 @@ abstract class AbstractCommand extends Command
 			$input->getArgument('target')
 		);
 
-		if ($input->hasOption('private-key')) {
+		$privateKeyFile = $input->getOption('private-key');
+		if (!empty($privateKeyFile)) {
 			$settings->setRsaLocalPrivateKey(
-				file_get_contents($input->getOption('private-key'))
+				file_get_contents($privateKeyFile)
 			);
 		}
 
-		if ($input->hasOption('public-key')) {
+		$publicKeyFile = $input->getOption('public-key');
+		if (!empty($publicKeyFile)) {
 			$settings->setRsaRemotePublicKey(
-				file_get_contents($input->getOption('public-key'))
+				file_get_contents($publicKeyFile)
 			);
 		}
 

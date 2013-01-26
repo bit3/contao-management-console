@@ -10,7 +10,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Contao\Connector\Command\UserCommands;
 use Contao\Connector\EndpointFactory;
 
-class UserinfoCommand extends AbstractCommand
+class UserInfoCommand extends AbstractCommand
 {
 	protected function configure()
 	{

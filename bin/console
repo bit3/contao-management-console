@@ -5,9 +5,11 @@ require(__DIR__ . '/../vendor/autoload.php');
 
 use Symfony\Component\Console\Application;
 use Contao\Connector\Console\StatusCommand;
-use Contao\Connector\Console\UserinfoCommand;
+use Contao\Connector\Console\UserInfoCommand;
+use Contao\Connector\Console\UserResetPasswordCommand;
 
 $application = new Application();
 $application->add(new StatusCommand);
-$application->add(new UserinfoCommand);
+$application->add(new UserInfoCommand);
+$application->add(new UserResetPasswordCommand);
 $application->run();

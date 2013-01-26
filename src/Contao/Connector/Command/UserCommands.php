@@ -60,7 +60,7 @@ class UserCommands extends AbstractCommands
 		);
 	}
 
-	public function passwordReset($userId, $password)
+	public function resetPassword($userIdentifier, $password)
 	{
 		$contaoVersion = $this->getContaoVersion();
 
@@ -70,21 +70,56 @@ class UserCommands extends AbstractCommands
 			$this->errors[] = 'Could not detect Contao version!';
 		}
 		else if ($this->prepareDatabaseConnection()) {
-			if (version_compare('3', $contaoVersion, '>=')) {
+				$stmt = $this->dbConnection->prepare(
+					'SELECT id, username FROM tl_user WHERE id=:identifier OR username=:identifier OR email=:identifier'
+				);
+				$stmt->bindParam(':identifier', $userIdentifier);
 
+			if (!$stmt->execute() || !$stmt->rowCount()) {
+				$this->errors[] = sprintf(
+					'The user id %s does not exists!',
+					$userIdentifier
+				);
 			}
-			else if (version_compare('2.11', $contaoVersion, '>=')) {
-				$stmt = $this->dbConnection->prepare('SELECT * FROM tl_user WHERE id=:id');
-				$stmt->bindParam(':id', $userId, PDO::PARAM_INT);
+			else {
+				$userId = $stmt->fetchColumn(0);
 
-				if ($stmt->execute() && $stmt->rowCount()) {
-					$salt = substr(
-						md5(uniqid(mt_rand(), true)),
-						0,
-						23
+				$hash = null;
+
+				if (version_compare($contaoVersion, '3', '>=')) {
+					if (CRYPT_SHA512 == 1)
+					{
+						$hash = crypt($password, '$6$' . md5(uniqid(mt_rand(), true)) . '$');
+					}
+					elseif (CRYPT_SHA256 == 1)
+					{
+						$hash = crypt($password, '$5$' . md5(uniqid(mt_rand(), true)) . '$');
+					}
+					elseif (CRYPT_BLOWFISH == 1)
+					{
+						$hash = crypt($password, '$2a$07$' . md5(uniqid(mt_rand(), true)) . '$');
+					}
+					else
+					{
+						$this->errors[] = 'Security violation: none of the required crypt() algorithms is available';
+					}
+				}
+				else if (version_compare($contaoVersion, '2.11', '>=')) {
+						$salt = substr(
+							md5(uniqid(mt_rand(), true)),
+							0,
+							23
+						);
+						$hash = sha1($salt . $password) . ':' . $salt;
+				}
+				else {
+					$this->errors[] = sprintf(
+						'The contao version %s is not supported!',
+						$contaoVersion
 					);
-					$hash = sha1($salt . $password) . ':' . $salt;
+				}
 
+				if ($hash) {
 					$stmt = $this->dbConnection->prepare('UPDATE tl_user SET password=:hash WHERE id=:id');
 					$stmt->bindParam(':hash', $hash);
 					$stmt->bindParam(':id', $userId, PDO::PARAM_INT);
@@ -96,18 +131,6 @@ class UserCommands extends AbstractCommands
 						$this->errors[] = 'Could not update user password!';
 					}
 				}
-				else {
-					$this->errors[] = sprintf(
-						'The user id %s does not exists!',
-						$userId
-					);
-				}
-			}
-			else {
-				$this->errors[] = sprintf(
-					'The contao version %s is not supported!',
-					$contaoVersion
-				);
 			}
 		}
 
