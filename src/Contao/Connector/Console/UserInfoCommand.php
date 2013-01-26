@@ -23,11 +23,6 @@ class UserInfoCommand extends AbstractCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$settings = $this->createSettings($input, $output);
-		$endpoint = $this->createEndpoint($settings);
-
-		$result = $endpoint->user->info();
-
 		$output
 			->getFormatter()
 			->setStyle('admin', new OutputFormatterStyle('blue'));
@@ -37,6 +32,11 @@ class UserInfoCommand extends AbstractCommand
 		$output
 			->getFormatter()
 			->setStyle('locked', new OutputFormatterStyle('magenta'));
+
+		$settings = $this->createSettings($input, $output);
+		$endpoint = $this->createEndpoint($settings);
+
+		$result = $endpoint->user->info();
 
 		$this->outputErrors($result, $output);
 
@@ -93,21 +93,5 @@ class UserInfoCommand extends AbstractCommand
 
 			$output->writeln(str_pad('', $paddings['id']+6) . ' has access to [' . implode(', ', $group->modules) . ']');
 		}
-	}
-
-	protected function calculatePadding($rows, $fields = null)
-	{
-		$paddings = array();
-		foreach ($rows as $row) {
-			foreach ($row as $key => $value) {
-				if (is_string($value) && ($fields === null || in_array($key, $fields))) {
-					$paddings[$key] = max(
-						strlen($value),
-						isset($paddings[$key]) ? $paddings[$key] : 0
-					);
-				}
-			}
-		}
-		return $paddings;
 	}
 }

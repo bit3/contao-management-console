@@ -78,4 +78,28 @@ abstract class AbstractCommand extends Command
 			$output->writeln('');
 		}
 	}
+
+	protected function calculatePadding($rows, $fields = null, $includeNames = false)
+	{
+		$paddings = array();
+		if ($includeNames && count($rows)) {
+			foreach ($rows[0] as $key => $value) {
+				$paddings[$key] = max(
+					strlen($key),
+					isset($paddings[$key]) ? $paddings[$key] : 0
+				);
+			}
+		}
+		foreach ($rows as $row) {
+			foreach ($row as $key => $value) {
+				if (is_string($value) && ($fields === null || in_array($key, $fields))) {
+					$paddings[$key] = max(
+						strlen($value),
+						isset($paddings[$key]) ? $paddings[$key] : 0
+					);
+				}
+			}
+		}
+		return $paddings;
+	}
 }

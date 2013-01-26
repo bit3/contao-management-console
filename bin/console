@@ -7,9 +7,11 @@ use Symfony\Component\Console\Application;
 use Contao\Connector\Console\StatusCommand;
 use Contao\Connector\Console\UserInfoCommand;
 use Contao\Connector\Console\UserResetPasswordCommand;
+use Contao\Connector\Console\SyslogEntriesCommand;
 
 $application = new Application();
 $application->add(new StatusCommand);
 $application->add(new UserInfoCommand);
 $application->add(new UserResetPasswordCommand);
+$application->add(new SyslogEntriesCommand);
 $application->run();

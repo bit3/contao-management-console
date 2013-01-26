@@ -8,6 +8,7 @@ use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
 use Contao\Connector\Command\StatusCommands;
 use Contao\Connector\Command\UserCommands;
+use Contao\Connector\Command\SyslogCommands;
 
 class EndpointFactory
 {
@@ -27,6 +28,7 @@ class EndpointFactory
 			$endpoint         = new \stdClass();
 			$endpoint->status = new StatusCommands($settings);
 			$endpoint->user   = new UserCommands($settings);
+			$endpoint->syslog = new SyslogCommands($settings);
 		}
 
 		// remote call

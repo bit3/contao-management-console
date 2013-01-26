@@ -23,11 +23,6 @@ class StatusCommand extends AbstractCommand
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$settings = $this->createSettings($input, $output);
-		$endpoint = $this->createEndpoint($settings);
-
-		$result = $endpoint->status->summary();
-
 		$output
 			->getFormatter()
 			->setStyle('disabled', new OutputFormatterStyle('yellow'));
@@ -60,6 +55,11 @@ class StatusCommand extends AbstractCommand
 		$output
 			->getFormatter()
 			->setStyle('locked', new OutputFormatterStyle('magenta'));
+
+		$settings = $this->createSettings($input, $output);
+		$endpoint = $this->createEndpoint($settings);
+
+		$result = $endpoint->status->summary();
 
 		$this->outputErrors($result, $output);
 
@@ -159,21 +159,5 @@ class StatusCommand extends AbstractCommand
 			$output->write('  - ');
 			$output->writeln($line);
 		}
-	}
-
-	protected function calculatePadding($rows, $fields = null)
-	{
-		$paddings = array();
-		foreach ($rows as $row) {
-			foreach ($row as $key => $value) {
-				if (is_string($value) && ($fields === null || in_array($key, $fields))) {
-					$paddings[$key] = max(
-						strlen($value),
-						isset($paddings[$key]) ? $paddings[$key] : 0
-					);
-				}
-			}
-		}
-		return $paddings;
 	}
 }

@@ -72,20 +72,4 @@ class UserResetPasswordCommand extends AbstractCommand
 			$output->writeln('<info>                                     </info>');
 		}
 	}
-
-	protected function calculatePadding($rows, $fields = null)
-	{
-		$paddings = array();
-		foreach ($rows as $row) {
-			foreach ($row as $key => $value) {
-				if (is_string($value) && ($fields === null || in_array($key, $fields))) {
-					$paddings[$key] = max(
-						strlen($value),
-						isset($paddings[$key]) ? $paddings[$key] : 0
-					);
-				}
-			}
-		}
-		return $paddings;
-	}
 }
