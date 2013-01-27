@@ -219,7 +219,7 @@ class SyslogEntriesCommand extends AbstractCommand
 			}
 		}
 		else {
-			$output->writeln('<warning>no records found</warning>');
+			$output->writeln('<comment>no records found</comment>');
 		}
 	}
 }

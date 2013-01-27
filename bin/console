@@ -4,14 +4,18 @@
 require(__DIR__ . '/../vendor/autoload.php');
 
 use Symfony\Component\Console\Application;
+use Contao\Connector\Console\LogsFilesCommand;
+use Contao\Connector\Console\LogsReadCommand;
 use Contao\Connector\Console\StatusCommand;
+use Contao\Connector\Console\SyslogEntriesCommand;
 use Contao\Connector\Console\UserInfoCommand;
 use Contao\Connector\Console\UserResetPasswordCommand;
-use Contao\Connector\Console\SyslogEntriesCommand;
 
 $application = new Application();
+$application->add(new LogsFilesCommand);
+$application->add(new LogsReadCommand);
 $application->add(new StatusCommand);
+$application->add(new SyslogEntriesCommand);
 $application->add(new UserInfoCommand);
 $application->add(new UserResetPasswordCommand);
-$application->add(new SyslogEntriesCommand);
 $application->run();
