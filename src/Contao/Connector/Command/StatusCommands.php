@@ -71,8 +71,8 @@ class StatusCommands extends AbstractCommands
 			if ($this->prepareLocalconfig()) {
 				/* Read incompatible versions */
 				$inactiveModules = $this->searchConfigEntry('inactiveModules');
-				if ($inactiveModules) {
-					$status->disabledModules = array_values(unserialize($inactiveModules));
+				if (is_array($inactiveModules)) {
+					$status->disabledModules = array_values($inactiveModules);
 					natcasesort($status->disabledModules);
 				}
 

@@ -8,7 +8,8 @@ use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
 use Contao\Connector\Settings;
 
-abstract class AbstractCommands {
+abstract class AbstractCommands
+{
 	/**
 	 * List of errors.
 	 *
@@ -105,13 +106,13 @@ abstract class AbstractCommands {
 			/* Read db settings */
 			$dbSettins = new \stdClass();
 
-			$dbSettins->dbDriver = $this->searchConfigEntry('dbDriver');
-			$dbSettins->dbHost = $this->searchConfigEntry('dbHost');
-			$dbSettins->dbPort = $this->searchConfigEntry('dbPort');
+			$dbSettins->dbDriver   = $this->searchConfigEntry('dbDriver');
+			$dbSettins->dbHost     = $this->searchConfigEntry('dbHost');
+			$dbSettins->dbPort     = $this->searchConfigEntry('dbPort');
 			$dbSettins->dbDatabase = $this->searchConfigEntry('dbDatabase');
-			$dbSettins->dbCharset = $this->searchConfigEntry('dbCharset');
-			$dbSettins->dbUser = $this->searchConfigEntry('dbUser');
-			$dbSettins->dbPass = $this->searchConfigEntry('dbPass');
+			$dbSettins->dbCharset  = $this->searchConfigEntry('dbCharset');
+			$dbSettins->dbUser     = $this->searchConfigEntry('dbUser');
+			$dbSettins->dbPass     = $this->searchConfigEntry('dbPass');
 
 			if (!isset($dbSettins->dbDriver) || !isset($dbSettins->dbUser) || !isset($dbSettins->dbDatabase)) {
 				$errors[] = 'system/config/localconfig.php does not contains a suitable database setup!';
@@ -168,7 +169,7 @@ abstract class AbstractCommands {
 				);
 				return true;
 			}
-			catch(Exception $e) {
+			catch (Exception $e) {
 				$this->errors[] = $e->getMessage();
 			}
 		}
@@ -179,7 +180,7 @@ abstract class AbstractCommands {
 	protected function searchConfigEntry($key)
 	{
 		if (preg_match(
-			'#\$GLOBALS\[\'TL_CONFIG\'\]\[\'' . $key . '\'\]\s*=\s*(["\']([^\']+)["\']|([^"\']+));#',
+			'#\$GLOBALS\[\'TL_CONFIG\'\]\[\'' . $key . '\'\]\s*=\s*(["\']([^\']*)["\']|([^"\']+));#',
 			$this->localconfig,
 			$match
 		)
@@ -192,11 +193,106 @@ abstract class AbstractCommands {
 			else if ($value == 'false') {
 				$value = false;
 			}
+			else {
+				$value = $this->saveUnserialize($value);
+			}
 
 			return $value;
 		}
 
 		return null;
+	}
+
+	/**
+	 * Search and replace a config variable
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 * @param bool   $flush Flush changes to the file.
+	 *
+	 * @return array|bool|null
+	 */
+	protected function replaceConfigEntry($key, $value, $flush = false)
+	{
+		if (is_array($value) && !count($value)) {
+			$value = '';
+		}
+		if (!is_scalar($value)) {
+			$value = serialize($value);
+		}
+
+		$string = sprintf(
+			'$GLOBALS[\'TL_CONFIG\'][\'%s\'] = %s;',
+			$key,
+			var_export($value, true)
+		);
+
+		if (preg_match(
+			'#\$GLOBALS\[\'TL_CONFIG\'\]\[\'' . $key . '\'\]\s*=\s*(["\']([^\']*)["\']|([^"\']+));#',
+			$this->localconfig,
+			$match
+		)
+		) {
+			$this->localconfig = str_replace(
+				$match[0],
+				$string,
+				$this->localconfig
+			);
+		}
+		else {
+			$this->localconfig = str_replace(
+				'### INSTALL SCRIPT STOP ###',
+				$string . "\n### INSTALL SCRIPT STOP ###",
+				$this->localconfig
+			);
+		}
+
+		if ($flush) {
+			$this->writeLocalconfigChanges();
+		}
+
+		return strpos($this->localconfig, $string) !== false;
+	}
+
+	/**
+	 * Search and replace a config variable
+	 *
+	 * @param string $key
+	 * @param mixed  $value
+	 * @param bool   $flush Flush changes to the file.
+	 *
+	 * @return array|bool|null
+	 */
+	protected function removeConfigEntry($key, $flush = false)
+	{
+		if (preg_match(
+			'#\$GLOBALS\[\'TL_CONFIG\'\]\[\'' . $key . '\'\]\s*=\s*(["\']([^\']*)["\']|([^"\']+));[\s\n\r]*#',
+			$this->localconfig,
+			$match
+		)
+		) {
+			$this->localconfig = str_replace(
+				$match[0],
+				'',
+				$this->localconfig
+			);
+
+			if ($flush) {
+				$this->writeLocalconfigChanges();
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
+	protected function writeLocalconfigChanges()
+	{
+		if ($this->localconfig !== null) {
+			$localconfigFile = $this->contaoInstallation->getFile('system/config/localconfig.php');
+			$localconfigFile->setContents($this->localconfig, false);
+		}
 	}
 
 	protected function getContaoVersion()
@@ -214,7 +310,7 @@ abstract class AbstractCommands {
 				$constants = $constantsFile->getContents();
 
 				$version = '';
-				$build = '';
+				$build   = '';
 
 				if (preg_match('#define\(\s*["\']VERSION["\']\s*,\s*["\']([^"\']+)["\']\s*\)#', $constants, $match)) {
 					$version = $match[1];

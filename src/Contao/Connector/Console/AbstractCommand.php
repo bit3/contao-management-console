@@ -102,4 +102,26 @@ abstract class AbstractCommand extends Command
 		}
 		return $paddings;
 	}
+
+	protected function formatValueForOutput($value)
+	{
+		if (is_array($value)) {
+			return sprintf(
+				'[%s]',
+				implode(
+					', ',
+					array_map(
+						array($this, 'formatValueForOutput'),
+						$value
+					)
+				)
+			);
+		}
+		else if (is_object($value)) {
+			return json_encode($value);
+		}
+		else {
+			return var_export($value, true);
+		}
+	}
 }

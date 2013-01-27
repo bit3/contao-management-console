@@ -6,6 +6,7 @@ use RemoteObjects\Client;
 use RemoteObjects\Transport\CurlClient;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
+use Contao\Connector\Command\ConfigCommands;
 use Contao\Connector\Command\LogsCommands;
 use Contao\Connector\Command\StatusCommands;
 use Contao\Connector\Command\SyslogCommands;
@@ -27,6 +28,7 @@ class EndpointFactory
 		// local call
 		if (empty($url['scheme']) || $url['scheme'] == 'file') {
 			$endpoint         = new \stdClass();
+			$endpoint->config = new ConfigCommands($settings);
 			$endpoint->logs   = new LogsCommands($settings);
 			$endpoint->status = new StatusCommands($settings);
 			$endpoint->syslog = new SyslogCommands($settings);
