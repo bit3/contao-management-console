@@ -200,7 +200,7 @@ EOF
 
 			$key = file_get_contents($privateKey);
 			$key = var_export($key, true);
-			
+
 			fwrite($buffer, <<<EOF
 define('CONTAO_CONNECTOR_RSA_LOCAL_PRIVATE_KEY', $key);
 
