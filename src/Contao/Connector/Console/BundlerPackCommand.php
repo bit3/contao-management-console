@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Monolog\Logger;
 use Composer\Autoload\ClassLoader;
 use Filicious\File;
 use Filicious\Filesystem;
@@ -61,13 +62,45 @@ class BundlerPackCommand extends Command
 
 		$this
 			->setName('bundler:pack')
-			->setDescription('Create bundled executable.')
+			->setDescription('Create bundled executable')
 			->addOption(
 			'output',
 			'o',
 			InputOption::VALUE_OPTIONAL,
-			'Write to file instead of stdout.',
+			'Write to file instead of stdout',
 			'php://stdout'
+		)
+			->addOption(
+			'private-key',
+			'K',
+			InputOption::VALUE_OPTIONAL,
+			'Path to the private key file'
+		)
+			->addOption(
+			'public-key',
+			'P',
+			InputOption::VALUE_OPTIONAL,
+			'Path to the public key file'
+		)
+			->addOption(
+			'contao-path',
+			'p',
+			InputOption::VALUE_OPTIONAL,
+			'Relative path from the connector to the contao installation base path',
+			'../'
+		)
+			->addOption(
+			'log',
+			'l',
+			InputOption::VALUE_OPTIONAL,
+			'Relative path from the connector to the log file (e.g. connector.log)'
+		)
+			->addOption(
+			'log-level',
+			'L',
+			InputOption::VALUE_OPTIONAL,
+			'Set the log level [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]',
+			'ERROR'
 		);
 	}
 
@@ -126,6 +159,7 @@ class BundlerPackCommand extends Command
 		$this->classes    = $this->sortFiles($this->classes);
 
 		// add execution script
+		$this->others[] = $this->fs->getFile('scripts/error_handler.php');
 		$this->others[] = $this->fs->getFile('scripts/connector.php');
 
 		$this->output->writeln(
@@ -154,6 +188,67 @@ class BundlerPackCommand extends Command
 
 EOF
 		);
+
+		$privateKey = $input->getOption('private-key');
+		$publicKey = $input->getOption('public-key');
+		$contaoPath = $input->getOption('contao-path');
+		$log = $input->getOption('log');
+		$logLevel = $input->getOption('log-level');
+
+		if ($privateKey && file_exists($privateKey)) {
+			$this->output->writeln(' <info>*</info> Add private key ' . $privateKey);
+
+			$key = file_get_contents($privateKey);
+			$key = var_export($key, true);
+			
+			fwrite($buffer, <<<EOF
+define('CONTAO_CONNECTOR_RSA_LOCAL_PRIVATE_KEY', $key);
+
+EOF
+			);
+		}
+
+		if ($publicKey && file_exists($publicKey)) {
+			$this->output->writeln(' <info>*</info> Add public key ' . $publicKey);
+
+			$key = file_get_contents($publicKey);
+			$key = var_export($key, true);
+
+			fwrite($buffer, <<<EOF
+define('CONTAO_CONNECTOR_RSA_REMOTE_PUBLIC_KEY', $key);
+
+EOF
+			);
+		}
+
+		$contaoPath = var_export('/' . $contaoPath, true);
+		fwrite($buffer, <<<EOF
+define('CONTAO_CONNECTOR_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
+
+EOF
+		);
+
+		if ($log) {
+			$this->output->writeln(' <info>*</info> Activate logging to ' . $log);
+
+			$log = var_export('/' . $log, true);
+
+			$logLevel = strtoupper($logLevel);
+			$class = new \ReflectionClass('\Monolog\Logger');
+			if ($class->hasConstant($logLevel)) {
+				$logLevel = $class->getConstant($logLevel);
+			}
+			else {
+				$logLevel = (int) $logLevel;
+			}
+
+			fwrite($buffer, <<<EOF
+define('CONTAO_CONNECTOR_LOG', dirname(__FILE__) . $log);
+define('CONTAO_CONNECTOR_LOG_LEVEL', $logLevel);
+
+EOF
+			);
+		}
 
 		// add files to buffer
 		foreach ($this->interfaces as $interface) {
