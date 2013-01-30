@@ -4,6 +4,7 @@
 require(__DIR__ . '/../vendor/autoload.php');
 
 use Symfony\Component\Console\Application;
+use Contao\Connector\Console\BundlerPackCommand;
 use Contao\Connector\Console\ConfigAllCommand;
 use Contao\Connector\Console\ConfigDisableCommand;
 use Contao\Connector\Console\ConfigEnableCommand;
@@ -18,6 +19,7 @@ use Contao\Connector\Console\UserInfoCommand;
 use Contao\Connector\Console\UserResetPasswordCommand;
 
 $application = new Application();
+$application->add(new BundlerPackCommand);
 $application->add(new ConfigAllCommand);
 $application->add(new ConfigDisableCommand);
 $application->add(new ConfigEnableCommand);
