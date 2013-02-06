@@ -1,6 +1,6 @@
 <?php
 
-namespace Contao\Connector\Console;
+namespace ContaoManagementApi\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

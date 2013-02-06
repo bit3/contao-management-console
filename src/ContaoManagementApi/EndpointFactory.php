@@ -1,16 +1,16 @@
 <?php
 
-namespace Contao\Connector;
+namespace ContaoManagementApi;
 
 use RemoteObjects\Client;
 use RemoteObjects\Transport\CurlClient;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
-use Contao\Connector\Command\ConfigCommands;
-use Contao\Connector\Command\LogsCommands;
-use Contao\Connector\Command\StatusCommands;
-use Contao\Connector\Command\SyslogCommands;
-use Contao\Connector\Command\UserCommands;
+use ContaoManagementApi\Command\ConfigCommands;
+use ContaoManagementApi\Command\LogsCommands;
+use ContaoManagementApi\Command\StatusCommands;
+use ContaoManagementApi\Command\SyslogCommands;
+use ContaoManagementApi\Command\UserCommands;
 
 class EndpointFactory
 {

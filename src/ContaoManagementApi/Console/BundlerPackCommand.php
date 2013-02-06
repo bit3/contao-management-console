@@ -1,6 +1,6 @@
 <?php
 
-namespace Contao\Connector\Console;
+namespace ContaoManagementApi\Console;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -86,14 +86,21 @@ class BundlerPackCommand extends Command
 			'contao-path',
 			'p',
 			InputOption::VALUE_OPTIONAL,
-			'Relative path from the connector to the contao installation base path',
+			'Relative path from the management api to the contao installation base path',
 			'../'
 		)
 			->addOption(
 			'log',
 			'l',
 			InputOption::VALUE_OPTIONAL,
-			'Relative path from the connector to the log file (e.g. connector.log)'
+			'Relative path from the management api to the log file (e.g. connect.log)'
+		)
+			->addOption(
+			'log-name',
+			'N',
+			InputOption::VALUE_OPTIONAL,
+			'Logger name',
+			'contao-management-api'
 		)
 			->addOption(
 			'log-level',
@@ -115,7 +122,7 @@ class BundlerPackCommand extends Command
 			$this->output = $output;
 		}
 
-		$this->basepath = dirname(dirname(dirname(dirname(__DIR__))));
+		$this->basepath = dirname(dirname(dirname(__DIR__)));
 
 		$this->output->writeln(' <info>*</info> Bundle files from ' . $this->basepath);
 
@@ -143,7 +150,7 @@ class BundlerPackCommand extends Command
 		}
 
 		// add src files and autodiscover dependencies
-		$this->output->writeln(' <info>*</info> Adding connector files');
+		$this->output->writeln(' <info>*</info> Adding management api files');
 
 		$srcDir   = $this->fs->getFile('src');
 		$iterator = $srcDir->getIterator(
@@ -160,7 +167,7 @@ class BundlerPackCommand extends Command
 
 		// add execution script
 		$this->others[] = $this->fs->getFile('scripts/error_handler.php');
-		$this->others[] = $this->fs->getFile('scripts/connector.php');
+		$this->others[] = $this->fs->getFile('scripts/connect.php');
 
 		$this->output->writeln(
 			sprintf(
@@ -193,6 +200,7 @@ EOF
 		$publicKey = $input->getOption('public-key');
 		$contaoPath = $input->getOption('contao-path');
 		$log = $input->getOption('log');
+		$logName = $input->getOption('log-name');
 		$logLevel = $input->getOption('log-level');
 
 		if ($privateKey && file_exists($privateKey)) {
@@ -202,7 +210,7 @@ EOF
 			$key = var_export($key, true);
 
 			fwrite($buffer, <<<EOF
-define('CONTAO_CONNECTOR_RSA_LOCAL_PRIVATE_KEY', $key);
+define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $key);
 
 EOF
 			);
@@ -215,7 +223,7 @@ EOF
 			$key = var_export($key, true);
 
 			fwrite($buffer, <<<EOF
-define('CONTAO_CONNECTOR_RSA_REMOTE_PUBLIC_KEY', $key);
+define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $key);
 
 EOF
 			);
@@ -223,7 +231,7 @@ EOF
 
 		$contaoPath = var_export('/' . $contaoPath, true);
 		fwrite($buffer, <<<EOF
-define('CONTAO_CONNECTOR_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
+define('CONTAO_MANAGEMENT_API_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
 
 EOF
 		);
@@ -243,11 +251,20 @@ EOF
 			}
 
 			fwrite($buffer, <<<EOF
-define('CONTAO_CONNECTOR_LOG', dirname(__FILE__) . $log);
-define('CONTAO_CONNECTOR_LOG_LEVEL', $logLevel);
+define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . $log);
+define('CONTAO_MANAGEMENT_API_LOG_LEVEL', $logLevel);
 
 EOF
 			);
+
+			if ($logName != 'contao-management-api') {
+				$logName = var_export($logName, true);
+				fwrite($buffer, <<<EOF
+define('CONTAO_MANAGEMENT_API_LOG_NAME', $logName);
+
+EOF
+				);
+			}
 		}
 
 		// add files to buffer

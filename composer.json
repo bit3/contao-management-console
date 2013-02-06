@@ -1,6 +1,6 @@
 {
-	"name":"contao-cloud/connector",
-	"description":"The contao cloud instance connector.",
+	"name":"bit3/contao-management-api",
+	"description":"The contao management api.",
 	"version":"1.0.0-dev",
 	"homepage":"http://contao-cloud.com",
 	"license":"",
@@ -14,9 +14,9 @@
 	],
 	"support": {
 		"email":"info@bit3.de",
-		"issues":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/issues",
-		"wiki":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/wikis/index",
-		"source":"http://gitlab.bit3.de/contaocloud/contao-cloud-core-bundle/tree/master"
+		"issues":"https://github.com/bit3/contao-management-api/issues",
+		"wiki":"https://github.com/bit3/contao-management-api/wiki",
+		"source":"https://github.com/bit3/contao-management-api"
 	},
 	"require": {
         "bit3/remote-objects":"@dev",
@@ -30,7 +30,7 @@
 	},
 	"autoload":{
 		"psr-0":{
-			"Contao\\Connector":"src"
+			"ContaoManagementApi":"src"
 		}
 	},
 	"repositories":[

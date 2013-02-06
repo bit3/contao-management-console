@@ -1,14 +1,14 @@
 <?php
 
-namespace Contao\Connector\Console;
+namespace ContaoManagementApi\Console;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Contao\Connector\Settings;
-use Contao\Connector\EndpointFactory;
+use ContaoManagementApi\Settings;
+use ContaoManagementApi\EndpointFactory;
 
 abstract class AbstractCommand extends Command
 {
@@ -17,7 +17,7 @@ abstract class AbstractCommand extends Command
 		$this->addArgument(
 			'target',
 			InputArgument::REQUIRED,
-			'Path to the contao installation or URL to the connector.'
+			'Path to the contao installation or URL to the management api.'
 		);
 		$this->addOption(
 			'private-key',
@@ -61,7 +61,7 @@ abstract class AbstractCommand extends Command
 	protected function createEndpoint(Settings $settings)
 	{
 		$factory = new EndpointFactory();
-		/** @var \Contao\Connector\Command\StatusCommands $endpoint */
+		/** @var \ContaoManagementApi\Command\StatusCommands $endpoint */
 		$endpoint = $factory->createEndpoint($settings);
 
 		return $endpoint;
