@@ -82,7 +82,7 @@ abstract class AbstractCommands
 		if ($this->prepareFilesystemAccess()) {
 			$localconfigFile = $this->contaoInstallation->getFile('system/config/localconfig.php');
 			if (!$localconfigFile->exists()) {
-				$errors[] = sprintf(
+				$this->errors[] = sprintf(
 					'system/config/localconfig.php is missing, maybe %s is not a contao installation or not configured yet?!',
 					$this->settings->getPath()
 				);
