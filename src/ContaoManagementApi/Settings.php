@@ -1,6 +1,6 @@
 <?php
 
-namespace Contao\Connector;
+namespace ContaoManagementApi;
 
 class Settings {
 	/**

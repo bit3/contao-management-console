@@ -1,14 +1,14 @@
 <?php
 
-namespace Contao\Connector\Console;
+namespace ContaoManagementApi\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use Contao\Connector\Command\UserCommands;
-use Contao\Connector\EndpointFactory;
+use ContaoManagementApi\Command\UserCommands;
+use ContaoManagementApi\EndpointFactory;
 
 class UserResetPasswordCommand extends AbstractCommand
 {

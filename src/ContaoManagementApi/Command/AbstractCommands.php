@@ -1,12 +1,12 @@
 <?php
 
-namespace Contao\Connector\Command;
+namespace ContaoManagementApi\Command;
 
 use Exception;
 use PDO;
 use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
-use Contao\Connector\Settings;
+use ContaoManagementApi\Settings;
 
 abstract class AbstractCommands
 {

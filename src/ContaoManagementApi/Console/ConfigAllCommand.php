@@ -1,14 +1,14 @@
 <?php
 
-namespace Contao\Connector\Console;
+namespace ContaoManagementApi\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use Contao\Connector\Command\StatusCommands;
-use Contao\Connector\EndpointFactory;
+use ContaoManagementApi\Command\StatusCommands;
+use ContaoManagementApi\EndpointFactory;
 
 class ConfigAllCommand extends AbstractCommand
 {

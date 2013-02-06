@@ -1,9 +1,9 @@
 <?php
 
-namespace Contao\Connector\Command;
+namespace ContaoManagementApi\Command;
 
 use PDO;
-use Contao\Connector\Settings;
+use ContaoManagementApi\Settings;
 use Filicious\File;
 use Filicious\Stream\StreamMode;
 

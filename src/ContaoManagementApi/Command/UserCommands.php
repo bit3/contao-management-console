@@ -1,16 +1,16 @@
 <?php
 
-namespace Contao\Connector\Command;
+namespace ContaoManagementApi\Command;
 
 use PDO;
 use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
-use Contao\Connector\Settings;
+use ContaoManagementApi\Settings;
 
 class UserCommands extends AbstractCommands
 {
 	/**
-	 * @param \Contao\Connector\Settings $settings
+	 * @param \ContaoManagementApi\Settings $settings
 	 *
 	 * @return UserInfoCommandResponse
 	 */

@@ -1,9 +1,9 @@
 <?php
 
-namespace Contao\Connector\Command;
+namespace ContaoManagementApi\Command;
 
 use PDO;
-use Contao\Connector\Settings;
+use ContaoManagementApi\Settings;
 
 class StatusCommands extends AbstractCommands
 {
