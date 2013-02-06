@@ -69,7 +69,9 @@ class UserInfoCommand extends AbstractCommand
 			if (!$user->admin && count($user->groups)) {
 				$groupNames = array();
 				foreach ($user->groups as $groupId) {
-					$groupNames[] = $groups->$groupId->name;
+					if (isset($groups->$groupId)) {
+						$groupNames[] = $groups->$groupId->name;
+					}
 				}
 				$output->writeln(str_pad('', $paddings['id']+6) . ' member of [' . implode(', ', $groupNames) . ']');
 			}
