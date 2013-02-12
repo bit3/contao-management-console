@@ -62,10 +62,14 @@ class connect
 		$endpoint = $factory->createEndpoint($settings);
 
 		$transport = new HttpServer('application/json');
-		$transport->setLogger($logger);
+		if ($logger) {
+			$transport->setLogger($logger);
+		}
 
 		$encoder = new JsonRpc20Encoder();
-		$encoder->setLogger($logger);
+		if ($logger) {
+			$encoder->setLogger($logger);
+		}
 
 		if ($settings->isEncryptionEnabled()) {
 			$encoder = new RsaEncoder(
