@@ -1,7 +1,15 @@
 #!/usr/bin/env php
 <?php
 
-require(__DIR__ . '/../vendor/autoload.php');
+if (is_file($autoloadFile = (__DIR__ . '/../vendor/autoload.php'))) {
+	require_once($autoloadFile);
+}
+else if (is_file($autoloadFile = (__DIR__ . '/../../vendor/autoload.php'))) {
+	require_once($autoloadFile);
+}
+else {
+	die('could not find autoload.php');
+}
 
 use Symfony\Component\Console\Application;
 use ContaoManagementApi\Console\BundlerPackCommand;
