@@ -40,10 +40,11 @@ class connect
 			$logger = null;
 		}
 
-		// change into parent directory
-		$path       = dirname(__FILE__);
-		$parentPath = dirname($path);
-		chdir($parentPath);
+		if ($_SERVER['QUERY_STRING'] == 'ping') {
+			header('Content-Type: text/plain; charset=utf-8');
+			echo 'pong';
+			exit;
+		}
 
 		$settings = new Settings();
 
