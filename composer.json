@@ -42,5 +42,8 @@
 			"type":"vcs",
 			"url":"https://github.com/bit3/php-RemoteObjects"
 		}
-	]
+	],
+	"config": {
+		"bin-dir": "bin"
+	}
 }
