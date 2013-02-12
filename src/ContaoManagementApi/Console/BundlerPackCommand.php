@@ -66,46 +66,58 @@ class BundlerPackCommand extends Command
 			->addOption(
 			'output',
 			'o',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Write to file instead of stdout',
 			'php://stdout'
 		)
 			->addOption(
-			'private-key',
+			'private-key-file',
 			'K',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Path to the private key file'
 		)
 			->addOption(
-			'public-key',
+			'private-key',
+			null,
+			InputOption::VALUE_REQUIRED,
+			'The private key'
+		)
+			->addOption(
+			'public-key-file',
 			'P',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Path to the public key file'
+		)
+			->addOption(
+			'public-key',
+			null,
+			InputOption::VALUE_REQUIRED,
+			'The public key'
 		)
 			->addOption(
 			'contao-path',
 			'p',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Relative path from the management api to the contao installation base path',
 			'../'
 		)
 			->addOption(
 			'log',
 			'l',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Relative path from the management api to the log file (e.g. connect.log)'
 		)
 			->addOption(
 			'log-name',
 			'N',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Logger name',
 			'contao-management-api'
 		)
 			->addOption(
 			'log-level',
 			'L',
-			InputOption::VALUE_OPTIONAL,
+			InputOption::VALUE_REQUIRED,
 			'Set the log level [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]',
 			'ERROR'
 		);
