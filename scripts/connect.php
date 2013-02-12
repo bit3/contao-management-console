@@ -39,7 +39,7 @@ class connect
 			$logger = null;
 		}
 
-		if ($_SERVER['QUERY_STRING'] == 'ping') {
+		if (isset($_GET['ping'])) {
 			header('Content-Type: text/plain; charset=utf-8');
 			echo 'pong';
 			exit;
