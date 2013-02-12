@@ -7,7 +7,6 @@ use RemoteObjects\Transport\HttpServer;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
 use ContaoManagementApi\Settings;
-use ContaoManagementApi\Encryption;
 use ContaoManagementApi\EndpointFactory;
 
 class connect
