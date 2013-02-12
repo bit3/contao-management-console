@@ -173,13 +173,25 @@ class BundlerPackCommand extends Command
 		);
 		$this->addFiles($iterator);
 
+		// add hard coded dependencies, that cannot be autodiscovered
+		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Math/BigInteger.php'));
+		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
+		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/Hash.php'));
+		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/RSA.php'));
+
 		// sort files
 		$this->interfaces = $this->sortFiles($this->interfaces);
 		$this->classes    = $this->sortFiles($this->classes);
 
+		// add error handler
+		$errorHandlerFile = $this->fs->getFile('scripts/error_handler.php');
+		$this->addDependencies($errorHandlerFile);
+		$this->others[] = $errorHandlerFile;
+
 		// add execution script
-		$this->others[] = $this->fs->getFile('scripts/error_handler.php');
-		$this->others[] = $this->fs->getFile('scripts/connect.php');
+		$runScriptFile = $this->fs->getFile('scripts/connect.php');
+		$this->addDependencies($runScriptFile);
+		$this->others[] = $runScriptFile;
 
 		$this->output->writeln(
 			sprintf(
@@ -208,34 +220,52 @@ class BundlerPackCommand extends Command
 EOF
 		);
 
+		$privateKeyFile = $input->getOption('private-key-file');
 		$privateKey = $input->getOption('private-key');
+		$publicKeyFile = $input->getOption('public-key-file');
 		$publicKey = $input->getOption('public-key');
 		$contaoPath = $input->getOption('contao-path');
 		$log = $input->getOption('log');
 		$logName = $input->getOption('log-name');
 		$logLevel = $input->getOption('log-level');
 
-		if ($privateKey && file_exists($privateKey)) {
-			$this->output->writeln(' <info>*</info> Add private key ' . $privateKey);
+		// add files to buffer
+		foreach ($this->interfaces as $interface) {
+			$this->writeFile($interface->file, $buffer);
+		}
+		foreach ($this->classes as $class) {
+			$this->writeFile($class->file, $buffer);
+		}
 
-			$key = file_get_contents($privateKey);
-			$key = var_export($key, true);
+		// add global namespace
+		fwrite($buffer, "namespace {\n");
+
+		// add constants to buffer
+		if ($privateKeyFile && file_exists($privateKeyFile)) {
+			$privateKey = file_get_contents($privateKeyFile);
+		}
+		if ($privateKey) {
+			$this->output->writeln(' <info>*</info> Add private key');
+
+			$privateKey = var_export($privateKey, true);
 
 			fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $key);
+define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $privateKey);
 
 EOF
 			);
 		}
 
-		if ($publicKey && file_exists($publicKey)) {
-			$this->output->writeln(' <info>*</info> Add public key ' . $publicKey);
+		if ($publicKeyFile && file_exists($publicKeyFile)) {
+			$publicKey = file_get_contents($publicKeyFile);
+		}
+		if ($publicKey) {
+			$this->output->writeln(' <info>*</info> Add public key');
 
-			$key = file_get_contents($publicKey);
-			$key = var_export($key, true);
+			$publicKey = var_export($publicKey, true);
 
 			fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $key);
+define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $publicKey);
 
 EOF
 			);
@@ -279,16 +309,13 @@ EOF
 			}
 		}
 
-		// add files to buffer
-		foreach ($this->interfaces as $interface) {
-			$this->writeFile($interface->file, $buffer);
-		}
-		foreach ($this->classes as $class) {
-			$this->writeFile($class->file, $buffer);
-		}
+		// add non-namespace files to buffer
 		foreach ($this->others as $file) {
-			$this->writeFile($file, $buffer);
+			$this->writeFile($file, $buffer, false);
 		}
+
+		// close global namespace
+		fwrite($buffer, "}\n");
 
 		// output the bundled script
 		fflush($buffer);
@@ -346,20 +373,27 @@ EOF
 		$content = $file->getContents();
 
 		if (preg_match(
-			'#((?:abstract\s+)?class|interface)(.+)(?:extends(.*))?(?:implements(.*))?\{#sU',
+			'#((?:abstract\s+)?class|interface)\s+([^\s]+)\s+(?:extends(.*))?(?:implements(.*))?\{#sU',
 			$content,
 			$match
 		)
 		) {
 			$name    = trim($match[2]);
-			$extends = isset($match[3])
-				? array_filter(
-					array_map(
-						'trim',
-						explode(',', $match[3])
-					)
-				)
-				: array();
+			$extends = array();
+
+			if (isset($match[3])) {
+				$extends = explode(',', $match[3]);
+				$extends = array_map('trim', $extends);
+				$extends = array_filter($extends);
+			}
+
+			if (isset($match[4])) {
+				$implements = explode(',', $match[4]);
+				$implements = array_map('trim', $implements);
+				$implements = array_filter($implements);
+				// handle implements same as extends
+				$extends = array_merge($extends, $implements);
+			}
 
 			$isInterface = $match[1] == 'interface';
 			$isAbstract  = $match[1] == 'abstract class';
@@ -385,7 +419,7 @@ EOF
 					$useName  = static::normaliseClassName(
 						isset($use[2])
 							? trim($use[2])
-							: preg_replace('#^.*\\\\(.*)$#U', '$1', $use[1])
+							: preg_replace('#^.*\\\\([^\\\\]*?)$#', '$1', $use[1])
 					);
 
 					$uses[$useName] = $useClass;
@@ -431,9 +465,59 @@ EOF
 					$this->output->writeln(' <error>*</error> Missing dependency ' . $useClass);
 				}
 			}
+			foreach ($extends as $extendsClass) {
+				$extendsFilename = $this->classLoader->findFile($extendsClass);
+				if ($extendsFilename) {
+					$extendsPathname = substr($extendsFilename, strlen($this->basepath));
+					$extendsFile = $this->fs->getFile($extendsPathname);
+					$this->addFile($extendsFile, true);
+				}
+				else if (!class_exists($extendsClass, false)) {
+					$this->output->writeln(' <error>*</error> Missing dependency ' . $extendsClass);
+				}
+			}
 		}
 		else {
+			$this->addDependencies($file);
+
 			$this->others[] = $file;
+		}
+	}
+
+	protected function addDependencies(File $file)
+	{
+		$content = $file->getContents();
+
+		$uses = array();
+		if (preg_match_all(
+			'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
+			$content,
+			$match,
+			PREG_SET_ORDER
+		)
+		) {
+			foreach ($match as $use) {
+				$useClass = static::normaliseClassName($use[1]);
+				$useName  = static::normaliseClassName(
+					isset($use[2])
+						? trim($use[2])
+						: preg_replace('#^.*\\\\([^\\\\]*?)$#', '$1', $use[1])
+				);
+
+				$uses[$useName] = $useClass;
+			}
+		}
+
+		foreach ($uses as $useClass) {
+			$useFilename = $this->classLoader->findFile($useClass);
+			if ($useFilename) {
+				$usePathname = substr($useFilename, strlen($this->basepath));
+				$useFile = $this->fs->getFile($usePathname);
+				$this->addFile($useFile, true);
+			}
+			else if (!class_exists($useClass, false)) {
+				$this->output->writeln(' <error>*</error> Missing dependency ' . $useClass);
+			}
 		}
 	}
 
@@ -469,7 +553,7 @@ EOF
 	 * @param array    $files
 	 * @param resource $buffer
 	 */
-	protected function writeFile(File $file, $buffer)
+	protected function writeFile(File $file, $buffer, $fallbackToGlobalNamespace = true)
 	{
 		if ($file->isFile()) {
 			$content = $file->getContents();
@@ -484,13 +568,16 @@ EOF
 			$content = trim($content);
 
 			// encapsulate namespace into {} block
-			if (preg_match('#(namespace [^;]+);#', $content)) {
+			if (preg_match('#(namespace [\w\d\\\\]+);#', $content)) {
 				$content = preg_replace(
-					'#(namespace [^;]+);#',
+					'#(namespace [\w\d\\\\]+);#',
 					'$1 {',
 					$content
 				);
 				$content .= "\n}\n";
+			}
+			else if ($fallbackToGlobalNamespace) {
+				$content = "namespace {\n" . $content . "\n}\n";
 			}
 
 			fwrite($buffer, "\n");
