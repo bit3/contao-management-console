@@ -174,10 +174,8 @@ class BundlerPackCommand extends Command
 		$this->addFiles($iterator);
 
 		// add hard coded dependencies, that cannot be autodiscovered
-		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Math/BigInteger.php'));
 		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
-		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/Hash.php'));
-		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/RSA.php'));
+		$this->addFile($this->fs->getFile('vendor/filicious/filicious/src/Filicious/Stream/StreamWrapper.php'));
 
 		// sort files
 		$this->interfaces = $this->sortFiles($this->interfaces);
@@ -406,25 +404,7 @@ EOF
 				$namespace = '';
 			}
 
-			$uses = array();
-			if (preg_match_all(
-				'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
-				$content,
-				$match,
-				PREG_SET_ORDER
-			)
-			) {
-				foreach ($match as $use) {
-					$useClass = static::normaliseClassName($use[1]);
-					$useName  = static::normaliseClassName(
-						isset($use[2])
-							? trim($use[2])
-							: preg_replace('#^.*\\\\([^\\\\]*?)$#', '$1', $use[1])
-					);
-
-					$uses[$useName] = $useClass;
-				}
-			}
+			$uses = $this->addDependencies($file, $namespace);
 
 			foreach ($extends as $k => $v) {
 				if (isset($uses[$v])) {
@@ -454,17 +434,6 @@ EOF
 				$this->classes[$item->name] = $item;
 			}
 
-			foreach ($uses as $useClass) {
-				$useFilename = $this->classLoader->findFile($useClass);
-				if ($useFilename) {
-					$usePathname = substr($useFilename, strlen($this->basepath));
-					$useFile = $this->fs->getFile($usePathname);
-					$this->addFile($useFile, true);
-				}
-				else if (!class_exists($useClass, false)) {
-					$this->output->writeln(' <error>*</error> Missing dependency ' . $useClass);
-				}
-			}
 			foreach ($extends as $extendsClass) {
 				$extendsFilename = $this->classLoader->findFile($extendsClass);
 				if ($extendsFilename) {
@@ -484,19 +453,20 @@ EOF
 		}
 	}
 
-	protected function addDependencies(File $file)
+	protected function addDependencies(File $file, $namespace = '\\')
 	{
 		$content = $file->getContents();
 
 		$uses = array();
-		if (preg_match_all(
-			'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
-			$content,
-			$match,
-			PREG_SET_ORDER
-		)
+		if (
+			preg_match_all(
+				'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
+				$content,
+				$matches,
+				PREG_SET_ORDER
+			)
 		) {
-			foreach ($match as $use) {
+			foreach ($matches as $use) {
 				$useClass = static::normaliseClassName($use[1]);
 				$useName  = static::normaliseClassName(
 					isset($use[2])
@@ -519,6 +489,59 @@ EOF
 				$this->output->writeln(' <error>*</error> Missing dependency ' . $useClass);
 			}
 		}
+
+		// remove comments before analyse code
+		$content = preg_replace(
+			'#//.*#',
+			'',
+			$content
+		);
+		$content = preg_replace(
+			'#/\*.*\*/#sU',
+			'',
+			$content
+		);
+
+		// search instantiations and static calls
+		if (
+			preg_match_all(
+				'#new ([\\\\\w]+)\(|([\\\\\w]+)::#',
+				$content,
+				$matches,
+				PREG_SET_ORDER
+			)
+		) {
+			foreach ($matches as $instantiation) {
+				$instantiationClass = isset($instantiation[2]) ? $instantiation[2] : $instantiation[1];
+				if (
+					$instantiationClass == 'self' ||
+					$instantiationClass == 'static' ||
+					$instantiationClass == 'parent'
+				) {
+					continue;
+				}
+				if (isset($uses[$instantiationClass])) {
+					$instantiationClass = static::normaliseClassName($uses[$instantiationClass]);
+				}
+				else if ($namespace && $instantiationClass[0] !== '\\') {
+					$instantiationClass = static::normaliseClassName($namespace . '\\' . $instantiationClass);
+				}
+				else {
+					$instantiationClass = static::normaliseClassName($instantiationClass);
+				}
+				$instantiationFilename = $this->classLoader->findFile($instantiationClass);
+				if ($instantiationFilename) {
+					$instantiationPathname = substr($instantiationFilename, strlen($this->basepath));
+					$instantiationFile = $this->fs->getFile($instantiationPathname);
+					$this->addFile($instantiationFile, true);
+				}
+				else if (!class_exists($instantiationClass, false)) {
+					$this->output->writeln(' <error>*</error> Missing dependency ' . $instantiationClass);
+				}
+			}
+		}
+
+		return $uses;
 	}
 
 	protected function sortFiles(array $classes)

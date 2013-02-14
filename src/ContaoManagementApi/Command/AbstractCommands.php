@@ -5,6 +5,7 @@ namespace ContaoManagementApi\Command;
 use Exception;
 use PDO;
 use Filicious\Filesystem;
+use Filicious\FilesystemConfig;
 use Filicious\Local\LocalAdapter;
 use ContaoManagementApi\Settings;
 
@@ -69,7 +70,10 @@ abstract class AbstractCommands
 			return false;
 		}
 
-		$this->contaoInstallation = new Filesystem(new LocalAdapter($this->settings->getPath()));
+		$config = new FilesystemConfig();
+		$config->set(FilesystemConfig::BASEPATH, $this->settings->getPath());
+		$config->set(FilesystemConfig::STREAM_SUPPORTED, false);
+		$this->contaoInstallation = new Filesystem(new LocalAdapter($config));
 		return true;
 	}
 
