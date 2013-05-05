@@ -27,6 +27,11 @@ class BundlerPackCommand extends Command
 	protected $basepath;
 
 	/**
+	 * @var string
+	 */
+	protected $vendorDir;
+
+	/**
 	 * @var Filesystem
 	 */
 	protected $fs;
@@ -136,13 +141,19 @@ class BundlerPackCommand extends Command
 
 		$this->basepath = dirname(dirname(dirname(__DIR__)));
 
+		if (is_file(__DIR__ . '/../../../vendor/autoload.php')) {
+			$this->vendorDir = dirname(dirname(dirname(__DIR__))) . '/vendor';
+		}
+		else if (is_file(__DIR__ . '/../../../../../../vendor/autoload.php')) {
+			$this->vendorDir = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__)))))) . '/vendor';
+		}
+		else {
+			throw new Exception('Could not find vendor dir!');
+		}
+
 		$this->output->writeln(' <info>*</info> Bundle files from ' . $this->basepath);
 
-		$this->fs = new Filesystem(
-			new LocalAdapter(
-				$this->basepath
-			)
-		);
+		$this->fs = new Filesystem(new LocalAdapter('/'));
 
 		$this->addedFiles = array();
 		$this->interfaces = array();
@@ -164,7 +175,7 @@ class BundlerPackCommand extends Command
 		// add src files and autodiscover dependencies
 		$this->output->writeln(' <info>*</info> Adding management api files');
 
-		$srcDir   = $this->fs->getFile('src');
+		$srcDir   = $this->fs->getFile($this->basepath . '/src');
 		$iterator = $srcDir->getIterator(
 			File::LIST_RECURSIVE,
 			function ($pathname) {
@@ -174,20 +185,20 @@ class BundlerPackCommand extends Command
 		$this->addFiles($iterator);
 
 		// add hard coded dependencies, that cannot be autodiscovered
-		$this->addFile($this->fs->getFile('vendor/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
-		$this->addFile($this->fs->getFile('vendor/filicious/filicious/src/Filicious/Stream/StreamWrapper.php'));
+		$this->addFile($this->fs->getFile($this->vendorDir . '/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
+		$this->addFile($this->fs->getFile($this->vendorDir . '/filicious/filicious/src/Filicious/Stream/StreamWrapper.php'));
 
 		// sort files
 		$this->interfaces = $this->sortFiles($this->interfaces);
 		$this->classes    = $this->sortFiles($this->classes);
 
 		// add error handler
-		$errorHandlerFile = $this->fs->getFile('scripts/error_handler.php');
+		$errorHandlerFile = $this->fs->getFile($this->basepath . '/scripts/error_handler.php');
 		$this->addDependencies($errorHandlerFile);
 		$this->others[] = $errorHandlerFile;
 
 		// add execution script
-		$runScriptFile = $this->fs->getFile('scripts/connect.php');
+		$runScriptFile = $this->fs->getFile($this->basepath . '/scripts/connect.php');
 		$this->addDependencies($runScriptFile);
 		$this->others[] = $runScriptFile;
 
@@ -437,8 +448,7 @@ EOF
 			foreach ($extends as $extendsClass) {
 				$extendsFilename = $this->classLoader->findFile($extendsClass);
 				if ($extendsFilename) {
-					$extendsPathname = substr($extendsFilename, strlen($this->basepath));
-					$extendsFile = $this->fs->getFile($extendsPathname);
+					$extendsFile = $this->fs->getFile($extendsFilename);
 					$this->addFile($extendsFile, true);
 				}
 				else if (!class_exists($extendsClass, false)) {
@@ -481,8 +491,7 @@ EOF
 		foreach ($uses as $useClass) {
 			$useFilename = $this->classLoader->findFile($useClass);
 			if ($useFilename) {
-				$usePathname = substr($useFilename, strlen($this->basepath));
-				$useFile = $this->fs->getFile($usePathname);
+				$useFile = $this->fs->getFile($useFilename);
 				$this->addFile($useFile, true);
 			}
 			else if (!class_exists($useClass, false)) {
@@ -531,8 +540,7 @@ EOF
 				}
 				$instantiationFilename = $this->classLoader->findFile($instantiationClass);
 				if ($instantiationFilename) {
-					$instantiationPathname = substr($instantiationFilename, strlen($this->basepath));
-					$instantiationFile = $this->fs->getFile($instantiationPathname);
+					$instantiationFile = $this->fs->getFile($instantiationFilename);
 					$this->addFile($instantiationFile, true);
 				}
 				else if (!class_exists($instantiationClass, false)) {
