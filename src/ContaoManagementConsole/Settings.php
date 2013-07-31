@@ -14,7 +14,7 @@
  * @filesource
  */
 
-namespace ContaoManagementApi;
+namespace ContaoManagementConsole;
 
 class Settings {
 	/**

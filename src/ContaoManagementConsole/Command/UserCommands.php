@@ -14,17 +14,17 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Command;
+namespace ContaoManagementConsole\Command;
 
 use PDO;
 use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
-use ContaoManagementApi\Settings;
+use ContaoManagementConsole\Settings;
 
 class UserCommands extends AbstractCommands
 {
 	/**
-	 * @param \ContaoManagementApi\Settings $settings
+	 * @param \ContaoManagementConsole\Settings $settings
 	 *
 	 * @return UserInfoCommandResponse
 	 */

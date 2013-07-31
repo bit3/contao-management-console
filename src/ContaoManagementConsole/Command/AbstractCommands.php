@@ -14,14 +14,14 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Command;
+namespace ContaoManagementConsole\Command;
 
 use Exception;
 use PDO;
 use Filicious\Filesystem;
 use Filicious\FilesystemConfig;
 use Filicious\Local\LocalAdapter;
-use ContaoManagementApi\Settings;
+use ContaoManagementConsole\Settings;
 
 abstract class AbstractCommands
 {

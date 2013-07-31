@@ -14,51 +14,47 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoManagementApi\Command\StatusCommands;
-use ContaoManagementApi\EndpointFactory;
 
-class ConfigAllCommand extends AbstractCommand
+class ConfigGetCommand extends AbstractCommand
 {
 	protected function configure()
 	{
 		parent::configure();
 
 		$this
-			->setName('config:all')
-			->setDescription('Get all config entries with value.');
+			->setName('config:get')
+			->setDescription('Get a config entry.')
+			->addArgument(
+			'key',
+			InputArgument::REQUIRED,
+			'The config entry key name.'
+		);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$key = $input->getArgument('key');
+
 		$settings = $this->createSettings($input, $output);
 		$endpoint = $this->createEndpoint($settings);
 
-		$result = $endpoint->config->all();
+		$result = $endpoint->config->get($key);
 
 		$this->outputErrors($result, $output);
 
-		$config = $result->config;
-
-		$pad = 0;
-		foreach ($config as $key => $value) {
-			$pad = max(strlen($key), $pad);
-		}
-		foreach ($config as $key => $value) {
-			$output->write(
-				sprintf(
-					'<comment>%s</comment>',
-					str_pad($key, $pad, ' ', STR_PAD_LEFT)
-				)
-			);
-			$output->write(': ');
-			$output->writeln($this->formatValueForOutput($value));
-		}
+		$output->write(
+			sprintf(
+				'<comment>%s</comment>',
+				$key
+			)
+		);
+		$output->write(': ');
+		$output->writeln($this->formatValueForOutput($result->value));
 	}
 }

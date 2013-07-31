@@ -14,15 +14,15 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use ContaoManagementApi\Settings;
-use ContaoManagementApi\EndpointFactory;
+use ContaoManagementConsole\Settings;
+use ContaoManagementConsole\EndpointFactory;
 
 abstract class AbstractCommand extends Command
 {
@@ -75,7 +75,7 @@ abstract class AbstractCommand extends Command
 	protected function createEndpoint(Settings $settings)
 	{
 		$factory = new EndpointFactory();
-		/** @var \ContaoManagementApi\Command\StatusCommands $endpoint */
+		/** @var \ContaoManagementConsole\Command\StatusCommands $endpoint */
 		$endpoint = $factory->createEndpoint($settings);
 
 		return $endpoint;

@@ -27,19 +27,19 @@ else {
 }
 
 use Symfony\Component\Console\Application;
-use ContaoManagementApi\Console\BundlerPackCommand;
-use ContaoManagementApi\Console\ConfigAllCommand;
-use ContaoManagementApi\Console\ConfigDisableCommand;
-use ContaoManagementApi\Console\ConfigEnableCommand;
-use ContaoManagementApi\Console\ConfigGetCommand;
-use ContaoManagementApi\Console\ConfigRemoveCommand;
-use ContaoManagementApi\Console\ConfigSetCommand;
-use ContaoManagementApi\Console\LogsFilesCommand;
-use ContaoManagementApi\Console\LogsReadCommand;
-use ContaoManagementApi\Console\StatusCommand;
-use ContaoManagementApi\Console\SyslogEntriesCommand;
-use ContaoManagementApi\Console\UserInfoCommand;
-use ContaoManagementApi\Console\UserResetPasswordCommand;
+use ContaoManagementConsole\Console\BundlerPackCommand;
+use ContaoManagementConsole\Console\ConfigAllCommand;
+use ContaoManagementConsole\Console\ConfigDisableCommand;
+use ContaoManagementConsole\Console\ConfigEnableCommand;
+use ContaoManagementConsole\Console\ConfigGetCommand;
+use ContaoManagementConsole\Console\ConfigRemoveCommand;
+use ContaoManagementConsole\Console\ConfigSetCommand;
+use ContaoManagementConsole\Console\LogsFilesCommand;
+use ContaoManagementConsole\Console\LogsReadCommand;
+use ContaoManagementConsole\Console\StatusCommand;
+use ContaoManagementConsole\Console\SyslogEntriesCommand;
+use ContaoManagementConsole\Console\UserInfoCommand;
+use ContaoManagementConsole\Console\UserResetPasswordCommand;
 
 $application = new Application();
 $application->add(new BundlerPackCommand);

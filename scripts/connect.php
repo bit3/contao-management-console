@@ -20,8 +20,8 @@ use RemoteObjects\Server;
 use RemoteObjects\Transport\HttpServer;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
-use ContaoManagementApi\Settings;
-use ContaoManagementApi\EndpointFactory;
+use ContaoManagementConsole\Settings;
+use ContaoManagementConsole\EndpointFactory;
 
 class connect
 {

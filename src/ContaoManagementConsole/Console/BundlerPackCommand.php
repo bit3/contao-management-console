@@ -14,7 +14,7 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;

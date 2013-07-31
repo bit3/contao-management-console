@@ -14,17 +14,17 @@
  * @filesource
  */
 
-namespace ContaoManagementApi;
+namespace ContaoManagementConsole;
 
 use RemoteObjects\Client;
 use RemoteObjects\Transport\CurlClient;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
-use ContaoManagementApi\Command\ConfigCommands;
-use ContaoManagementApi\Command\LogsCommands;
-use ContaoManagementApi\Command\StatusCommands;
-use ContaoManagementApi\Command\SyslogCommands;
-use ContaoManagementApi\Command\UserCommands;
+use ContaoManagementConsole\Command\ConfigCommands;
+use ContaoManagementConsole\Command\LogsCommands;
+use ContaoManagementConsole\Command\StatusCommands;
+use ContaoManagementConsole\Command\SyslogCommands;
+use ContaoManagementConsole\Command\UserCommands;
 
 class EndpointFactory
 {

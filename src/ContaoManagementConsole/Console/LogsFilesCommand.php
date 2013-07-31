@@ -14,51 +14,45 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoManagementApi\Command\StatusCommands;
-use ContaoManagementApi\EndpointFactory;
 
-class ConfigDisableCommand extends AbstractCommand
+class LogsFilesCommand extends AbstractCommand
 {
 	protected function configure()
 	{
 		parent::configure();
 
 		$this
-			->setName('config:disable')
-			->setDescription('Disable modules.')
-			->addArgument(
-			'modules',
-			InputArgument::IS_ARRAY,
-			'List of modules to disable.'
-		);
+			->setName('logs:files')
+			->setDescription('List all available log files.');
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$modules = $input->getArgument('modules');
-
 		$settings = $this->createSettings($input, $output);
 		$endpoint = $this->createEndpoint($settings);
 
-		$result = $endpoint->config->disable($modules);
+		$result = $endpoint->logs->files();
 
 		$this->outputErrors($result, $output);
 
-		if (count($result->inactiveModules)) {
-			$output->writeln('<info>disabled modules:</info>');
-			foreach ($result->inactiveModules as $inactiveModule) {
-				$output->writeln('- ' . $inactiveModule);
+		$files = $result->files;
+
+		if (count($files)) {
+			foreach ($files as $file => $details) {
+				$output->writeln('- ' . $file);
+				$output->writeln('  size: ' . number_format($details->size) . ' bytes');
+				$output->writeln('  line count: ' . number_format($details->lines));
+				$output->writeln('  last modified: ' . $details->modified);
 			}
 		}
 		else {
-			$output->writeln('<info>no modules disabled</info>');
+			$output->writeln('<comment>no files found</comment>');
 		}
 	}
 }

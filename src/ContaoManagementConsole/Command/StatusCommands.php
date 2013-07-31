@@ -14,10 +14,10 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Command;
+namespace ContaoManagementConsole\Command;
 
 use PDO;
-use ContaoManagementApi\Settings;
+use ContaoManagementConsole\Settings;
 
 class StatusCommands extends AbstractCommands
 {

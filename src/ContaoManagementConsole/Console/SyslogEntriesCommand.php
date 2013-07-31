@@ -14,15 +14,15 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoManagementApi\Command\StatusCommands;
-use ContaoManagementApi\EndpointFactory;
+use ContaoManagementConsole\Command\StatusCommands;
+use ContaoManagementConsole\EndpointFactory;
 
 class SyslogEntriesCommand extends AbstractCommand
 {

@@ -14,45 +14,51 @@
  * @filesource
  */
 
-namespace ContaoManagementApi\Console;
+namespace ContaoManagementConsole\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use ContaoManagementConsole\Command\StatusCommands;
+use ContaoManagementConsole\EndpointFactory;
 
-class ConfigRemoveCommand extends AbstractCommand
+class ConfigDisableCommand extends AbstractCommand
 {
 	protected function configure()
 	{
 		parent::configure();
 
 		$this
-			->setName('config:remove')
-			->setDescription('Remove a config entry.')
+			->setName('config:disable')
+			->setDescription('Disable modules.')
 			->addArgument(
-			'key',
-			InputArgument::REQUIRED,
-			'The config entry key name.'
+			'modules',
+			InputArgument::IS_ARRAY,
+			'List of modules to disable.'
 		);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$key = $input->getArgument('key');
+		$modules = $input->getArgument('modules');
 
 		$settings = $this->createSettings($input, $output);
 		$endpoint = $this->createEndpoint($settings);
 
-		$result = $endpoint->config->remove($key);
+		$result = $endpoint->config->disable($modules);
 
 		$this->outputErrors($result, $output);
 
-		if ($result->success) {
-			$output->writeln('<info>config entry removed</info>');
+		if (count($result->inactiveModules)) {
+			$output->writeln('<info>disabled modules:</info>');
+			foreach ($result->inactiveModules as $inactiveModule) {
+				$output->writeln('- ' . $inactiveModule);
+			}
 		}
 		else {
-			$output->writeln('<error>could not remove config entry</error>');
+			$output->writeln('<info>no modules disabled</info>');
 		}
 	}
 }
