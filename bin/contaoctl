@@ -28,12 +28,6 @@ else {
 
 use Symfony\Component\Console\Application;
 use ContaoManagementConsole\Console\Command\BundlerPackCommand;
-use ContaoManagementConsole\Console\Command\ConfigAllCommand;
-use ContaoManagementConsole\Console\Command\ConfigDisableCommand;
-use ContaoManagementConsole\Console\Command\ConfigEnableCommand;
-use ContaoManagementConsole\Console\Command\ConfigGetCommand;
-use ContaoManagementConsole\Console\Command\ConfigRemoveCommand;
-use ContaoManagementConsole\Console\Command\ConfigSetCommand;
 use ContaoManagementConsole\Console\Command\LogsFilesCommand;
 use ContaoManagementConsole\Console\Command\LogsReadCommand;
 use ContaoManagementConsole\Console\Command\StatusCommand;
@@ -43,12 +37,6 @@ use ContaoManagementConsole\Console\Command\UserResetPasswordCommand;
 
 $application = new Application();
 $application->add(new BundlerPackCommand);
-$application->add(new ConfigAllCommand);
-$application->add(new ConfigDisableCommand);
-$application->add(new ConfigEnableCommand);
-$application->add(new ConfigGetCommand);
-$application->add(new ConfigRemoveCommand);
-$application->add(new ConfigSetCommand);
 $application->add(new LogsFilesCommand);
 $application->add(new LogsReadCommand);
 $application->add(new StatusCommand);
