@@ -87,12 +87,10 @@ class BundlerPackCommand extends Command
 		$this
 			->setName('bundler:pack')
 			->setDescription('Create bundled executable')
-			->addOption(
+			->addArgument(
 				'output',
-				'o',
-				InputOption::VALUE_REQUIRED,
-				'Write to file instead of stdout',
-				'php://stdout'
+				InputArgument::REQUIRED,
+				'Write to this file'
 			)
 			->addOption(
 				'private-key-file',
@@ -149,15 +147,10 @@ class BundlerPackCommand extends Command
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$out = $input->getOption('output');
+		$out = $input->getArgument('output');
 
 		$this->input = $input;
-		if ($out == 'php://stdout') {
-			$this->output = $output->getErrorOutput();
-		}
-		else {
-			$this->output = $output;
-		}
+		$this->output = $output;
 
 		$this->detectPaths();
 		$this->detectSelfVersion();
@@ -217,11 +210,10 @@ class BundlerPackCommand extends Command
 
 	protected function initializePhar($filename)
 	{
-		if ($filename != 'php://stdout') {
-			if (file_exists($filename)) {
-				unlink($filename);
-			}
+		if (file_exists($filename)) {
+			unlink($filename);
 		}
+		
 		$this->phar = new \Phar($filename);
 		$this->phar->setSignatureAlgorithm(\Phar::SHA1);
 
