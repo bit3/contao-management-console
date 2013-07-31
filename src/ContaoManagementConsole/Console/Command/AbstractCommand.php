@@ -47,7 +47,7 @@ abstract class AbstractCommand extends Command
 		);
 	}
 
-	protected function createSettings(InputInterface $input, OutputInterface $output)
+	protected function createSettings(InputInterface $input)
 	{
 		$settings = new Settings();
 
@@ -90,52 +90,6 @@ abstract class AbstractCommand extends Command
 				$output->writeln('<error>' . str_pad('', strlen($error) + 10) . '</error>');
 			}
 			$output->writeln('');
-		}
-	}
-
-	protected function calculatePadding($rows, $fields = null, $includeNames = false)
-	{
-		$paddings = array();
-		if ($includeNames && count($rows)) {
-			foreach ($rows[0] as $key => $value) {
-				$paddings[$key] = max(
-					strlen($key),
-					isset($paddings[$key]) ? $paddings[$key] : 0
-				);
-			}
-		}
-		foreach ($rows as $row) {
-			foreach ($row as $key => $value) {
-				if (is_string($value) && ($fields === null || in_array($key, $fields))) {
-					$paddings[$key] = max(
-						strlen($value),
-						isset($paddings[$key]) ? $paddings[$key] : 0
-					);
-				}
-			}
-		}
-		return $paddings;
-	}
-
-	protected function formatValueForOutput($value)
-	{
-		if (is_array($value)) {
-			return sprintf(
-				'[%s]',
-				implode(
-					', ',
-					array_map(
-						array($this, 'formatValueForOutput'),
-						$value
-					)
-				)
-			);
-		}
-		else if (is_object($value)) {
-			return json_encode($value);
-		}
-		else {
-			return var_export($value, true);
 		}
 	}
 }
