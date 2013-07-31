@@ -75,7 +75,7 @@ abstract class AbstractCommand extends Command
 	protected function createEndpoint(Settings $settings)
 	{
 		$factory = new EndpointFactory();
-		/** @var \ContaoManagementConsole\Command\StatusCommands $endpoint */
+		/** @var \ContaoManagementConsole\Endpoint\Command\StatusCommands $endpoint */
 		$endpoint = $factory->createEndpoint($settings);
 
 		return $endpoint;

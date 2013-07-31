@@ -21,7 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
-use ContaoManagementConsole\Command\StatusCommands;
+use ContaoManagementConsole\Endpoint\Command\StatusCommands;
 use ContaoManagementConsole\EndpointFactory;
 
 class ConfigDisableCommand extends AbstractCommand

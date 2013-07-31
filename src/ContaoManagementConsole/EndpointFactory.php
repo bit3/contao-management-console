@@ -20,11 +20,11 @@ use RemoteObjects\Client;
 use RemoteObjects\Transport\CurlClient;
 use RemoteObjects\Encode\JsonRpc20Encoder;
 use RemoteObjects\Encode\RsaEncoder;
-use ContaoManagementConsole\Command\ConfigCommands;
-use ContaoManagementConsole\Command\LogsCommands;
-use ContaoManagementConsole\Command\StatusCommands;
-use ContaoManagementConsole\Command\SyslogCommands;
-use ContaoManagementConsole\Command\UserCommands;
+use ContaoManagementConsole\Endpoint\Command\ConfigCommands;
+use ContaoManagementConsole\Endpoint\Command\LogsCommands;
+use ContaoManagementConsole\Endpoint\Command\StatusCommands;
+use ContaoManagementConsole\Endpoint\Command\SyslogCommands;
+use ContaoManagementConsole\Endpoint\Command\UserCommands;
 
 class EndpointFactory
 {

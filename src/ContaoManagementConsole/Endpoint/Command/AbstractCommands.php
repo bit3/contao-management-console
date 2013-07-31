@@ -14,7 +14,7 @@
  * @filesource
  */
 
-namespace ContaoManagementConsole\Command;
+namespace ContaoManagementConsole\Endpoint\Command;
 
 use Exception;
 use PDO;
