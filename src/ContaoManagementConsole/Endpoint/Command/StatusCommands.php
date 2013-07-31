@@ -24,6 +24,7 @@ class StatusCommands extends AbstractCommands
 	public function summary()
 	{
 		$status = (object) array(
+			'comaco'          => new \stdClass(),
 			'version'         => -1,
 			'build'           => -1,
 			'lts'             => false,
@@ -32,6 +33,8 @@ class StatusCommands extends AbstractCommands
 			'extensions'      => new \stdClass(),
 			'users'           => array()
 		);
+
+		$this->setConsoleVersion($status);
 
 		if ($this->prepareFilesystemAccess()) {
 			/* ***** Read constants like VERSION, BUILD and LONG_TERM_SUPPORT ******************************************* */
@@ -59,6 +62,16 @@ class StatusCommands extends AbstractCommands
 			'status' => $status,
 			'errors' => $this->errors
 		);
+	}
+
+	protected function setConsoleVersion($status)
+	{
+		if (defined('COMACO_VERSION')) {
+			$status->comaco->version = COMACO_VERSION;
+		}
+		if (defined('COMACO_DATE')) {
+			$status->comaco->date = COMACO_DATE;
+		}
 	}
 
 	protected function setContaoVersion($status)

@@ -23,6 +23,8 @@ use RemoteObjects\Encode\RsaEncoder;
 use ContaoManagementConsole\Settings;
 use ContaoManagementConsole\EndpointFactory;
 
+require __DIR__ . '/error_handler.php';
+
 class connect
 {
 	public static function getInstance()
@@ -36,7 +38,7 @@ class connect
 		error_reporting(E_ALL ^ E_NOTICE);
 
 		if (defined('COMACO_LOG')) {
-			$log = 'contao-management-api';
+			$log = 'contao-management-console';
 			if (defined('COMACO_LOG_NAME')) {
 				$log = COMACO_LOG_NAME;
 			}

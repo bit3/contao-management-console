@@ -134,7 +134,7 @@ class BundlerPackCommand extends Command
 				'N',
 				InputOption::VALUE_REQUIRED,
 				'Logger name',
-				'contao-management-api'
+				'contao-management-console'
 			)
 			->addOption(
 				'log-level',
@@ -223,28 +223,11 @@ class BundlerPackCommand extends Command
 	protected function createPhar()
 	{
 		$composerJsonFile = $this->filesystem->getFile($this->ownpath . '/composer.json');
-		$composerJson     = $composerJsonFile->getContents();
-		$composerConfig   = json_decode($composerJson);
 
 		$src = $this->filesystem->getFile($this->ownpath . '/src');
 		$this->addFilesFrom($src, 'src');
 
-		foreach ($composerConfig->require as $packageName => $packageConstraint) {
-			if ($packageName == 'php') {
-				continue;
-			}
-
-			$packageDir = $this->filesystem->getFile($this->vendorDir . '/' . $packageName);
-
-			if ($packageDir->isDirectory()) {
-				$this->addFilesFrom($packageDir, 'vendor/' . $packageName);
-			}
-			else {
-				$this->output->writeln(
-					' <comment>*</comment> Package ' . $packageName . ' does not exist in ' . $packageDir->getPathname()
-				);
-			}
-		}
+		$this->addDependencies($composerJsonFile);
 
 		$this->addFile(
 			$this->filesystem->getFile($this->ownpath . '/scripts/error_handler.php'),
@@ -254,6 +237,38 @@ class BundlerPackCommand extends Command
 		$this->addFile($this->filesystem->getFile($this->ownpath . '/scripts/connect.php'), 'scripts/connect.php');
 		$this->addFile($this->filesystem->getFile($this->vendorDir . '/autoload.php'), 'vendor/autoload.php');
 		$this->addFilesFrom($this->filesystem->getFile($this->vendorDir . '/composer'), 'vendor/composer');
+	}
+
+	protected function addDependencies(File $composerJsonFile, &$addedDependencies = array())
+	{
+		$composerJson     = $composerJsonFile->getContents();
+		$composerConfig   = json_decode($composerJson);
+
+		if (isset($composerConfig->require)) {
+			foreach ($composerConfig->require as $packageName => $packageConstraint) {
+				if ($packageName == 'php' || in_array($packageName, $addedDependencies)) {
+					continue;
+				}
+
+				$addedDependencies[] = $packageName;
+
+				$packageDir = $this->filesystem->getFile($this->vendorDir . '/' . $packageName);
+
+				if ($packageDir->isDirectory()) {
+					$this->addFilesFrom($packageDir, 'vendor/' . $packageName);
+				}
+				else {
+					$this->output->writeln(
+						' <comment>*</comment> Package ' . $packageName . ' does not exist in ' . $packageDir->getPathname()
+					);
+				}
+
+				$composerJsonFile = $this->filesystem->getFile($this->vendorDir . '/' . $packageName . '/composer.json');
+				if ($composerJsonFile->exists()) {
+					$this->addDependencies($composerJsonFile, $addedDependencies);
+				}
+			}
+		}
 	}
 
 	protected function addFilesFrom(File $directory, $into)
@@ -287,7 +302,7 @@ class BundlerPackCommand extends Command
 
 		if ($stripBin) {
 			$content = preg_replace('~^#!/usr/bin/env php\s*~', '', $content);
-			$content = str_replace('$application->add(new BundlerPackCommand);', '', $content);
+			$content = str_replace('BundlerPackCommand', 'UpdateCommand', $content);
 		}
 
 		$this->phar->addFromString($path, $content);
@@ -308,7 +323,6 @@ class BundlerPackCommand extends Command
 		$date     = var_export($this->date, true);
 
 		$stub = <<<EOF
-#!/usr/bin/env php
 <?php
 /*
  * This file is a build of the Management Console for Contao Open Source CMS
@@ -316,6 +330,7 @@ class BundlerPackCommand extends Command
 
 Phar::mapPhar('$basename');
 
+define('COMACO_FILE', '{$basename}');
 define('COMACO_VERSION', {$version});
 define('COMACO_DATE', {$date});
 
@@ -385,7 +400,7 @@ define('COMACO_LOG_LEVEL', $logLevel);
 
 EOF;
 
-			if ($logName != 'contao-management-api') {
+			if ($logName != 'contao-management-console') {
 				$logName = var_export($logName, true);
 				$stub .= <<<EOF
 define('COMACO_LOG_NAME', $logName);
@@ -398,6 +413,7 @@ EOF;
 		$stub .= <<<EOF
 
 require 'phar://$basename/scripts/error_handler.php';
+require 'phar://$basename/vendor/autoload.php';
 
 if (PHP_SAPI == 'cli') {
 	require 'phar://$basename/bin/contaoctl.php';

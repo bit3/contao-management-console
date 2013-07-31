@@ -41,8 +41,7 @@ class EndpointFactory
 
 		// local call
 		if (empty($url['scheme']) || $url['scheme'] == 'file') {
-			$endpoint         = new \stdClass();
-			$endpoint->status = new StatusCommands($settings);
+			$endpoint = new Endpoint($settings);
 		}
 
 		// remote call

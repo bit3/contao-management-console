@@ -85,6 +85,19 @@ class StatusCommand extends AbstractCommand
 			->setStyle('locked', new OutputFormatterStyle('magenta'));
 	}
 
+	protected function outputConsoleVersion(OutputInterface $output, $status)
+	{
+		if (isset($status->comaco) && (isset($status->comaco->version) || isset($status->comaco->date))) {
+			$output->writeln('<info>Management console</info>');
+			if (isset($status->comaco->version)) {
+				$output->writeln('  - ' . $status->comaco->version);
+			}
+			if (isset($status->comaco->date)) {
+				$output->writeln('  - ' . $status->comaco->date);
+			}
+		}
+	}
+
 	protected function outputContaoVersion(OutputInterface $output, $status)
 	{
 		$output->writeln('<info>Version</info>');
@@ -184,6 +197,7 @@ class StatusCommand extends AbstractCommand
 
 		$status = $result->status;
 
+		$this->outputConsoleVersion($output, $status);
 		$this->outputContaoVersion($output, $status);
 		$this->outputModules($output, $status);
 		$this->outputExtensions($output, $status);
