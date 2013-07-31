@@ -27,19 +27,19 @@ else {
 }
 
 use Symfony\Component\Console\Application;
-use ContaoManagementConsole\Console\BundlerPackCommand;
-use ContaoManagementConsole\Console\ConfigAllCommand;
-use ContaoManagementConsole\Console\ConfigDisableCommand;
-use ContaoManagementConsole\Console\ConfigEnableCommand;
-use ContaoManagementConsole\Console\ConfigGetCommand;
-use ContaoManagementConsole\Console\ConfigRemoveCommand;
-use ContaoManagementConsole\Console\ConfigSetCommand;
-use ContaoManagementConsole\Console\LogsFilesCommand;
-use ContaoManagementConsole\Console\LogsReadCommand;
-use ContaoManagementConsole\Console\StatusCommand;
-use ContaoManagementConsole\Console\SyslogEntriesCommand;
-use ContaoManagementConsole\Console\UserInfoCommand;
-use ContaoManagementConsole\Console\UserResetPasswordCommand;
+use ContaoManagementConsole\Console\Command\BundlerPackCommand;
+use ContaoManagementConsole\Console\Command\ConfigAllCommand;
+use ContaoManagementConsole\Console\Command\ConfigDisableCommand;
+use ContaoManagementConsole\Console\Command\ConfigEnableCommand;
+use ContaoManagementConsole\Console\Command\ConfigGetCommand;
+use ContaoManagementConsole\Console\Command\ConfigRemoveCommand;
+use ContaoManagementConsole\Console\Command\ConfigSetCommand;
+use ContaoManagementConsole\Console\Command\LogsFilesCommand;
+use ContaoManagementConsole\Console\Command\LogsReadCommand;
+use ContaoManagementConsole\Console\Command\StatusCommand;
+use ContaoManagementConsole\Console\Command\SyslogEntriesCommand;
+use ContaoManagementConsole\Console\Command\UserInfoCommand;
+use ContaoManagementConsole\Console\Command\UserResetPasswordCommand;
 
 $application = new Application();
 $application->add(new BundlerPackCommand);

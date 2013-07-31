@@ -14,7 +14,7 @@
  * @filesource
  */
 
-namespace ContaoManagementConsole\Console;
+namespace ContaoManagementConsole\Console\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,41 +24,41 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use ContaoManagementConsole\Endpoint\Command\StatusCommands;
 use ContaoManagementConsole\EndpointFactory;
 
-class ConfigAllCommand extends AbstractCommand
+class ConfigEnableCommand extends AbstractCommand
 {
 	protected function configure()
 	{
 		parent::configure();
 
 		$this
-			->setName('config:all')
-			->setDescription('Get all config entries with value.');
+			->setName('config:enable')
+			->setDescription('Enable modules.')
+			->addArgument(
+			'modules',
+			InputArgument::IS_ARRAY,
+			'List of modules to enable.'
+		);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
+		$modules = $input->getArgument('modules');
+
 		$settings = $this->createSettings($input, $output);
 		$endpoint = $this->createEndpoint($settings);
 
-		$result = $endpoint->config->all();
+		$result = $endpoint->config->enable($modules);
 
 		$this->outputErrors($result, $output);
 
-		$config = $result->config;
-
-		$pad = 0;
-		foreach ($config as $key => $value) {
-			$pad = max(strlen($key), $pad);
+		if (count($result->inactiveModules)) {
+			$output->writeln('<info>disabled modules:</info>');
+			foreach ($result->inactiveModules as $inactiveModule) {
+				$output->writeln('- ' . $inactiveModule);
+			}
 		}
-		foreach ($config as $key => $value) {
-			$output->write(
-				sprintf(
-					'<comment>%s</comment>',
-					str_pad($key, $pad, ' ', STR_PAD_LEFT)
-				)
-			);
-			$output->write(': ');
-			$output->writeln($this->formatValueForOutput($value));
+		else {
+			$output->writeln('<info>no modules disabled</info>');
 		}
 	}
 }

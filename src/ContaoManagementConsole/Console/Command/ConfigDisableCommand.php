@@ -14,7 +14,7 @@
  * @filesource
  */
 
-namespace ContaoManagementConsole\Console;
+namespace ContaoManagementConsole\Console\Command;
 
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -24,19 +24,19 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use ContaoManagementConsole\Endpoint\Command\StatusCommands;
 use ContaoManagementConsole\EndpointFactory;
 
-class ConfigEnableCommand extends AbstractCommand
+class ConfigDisableCommand extends AbstractCommand
 {
 	protected function configure()
 	{
 		parent::configure();
 
 		$this
-			->setName('config:enable')
-			->setDescription('Enable modules.')
+			->setName('config:disable')
+			->setDescription('Disable modules.')
 			->addArgument(
 			'modules',
 			InputArgument::IS_ARRAY,
-			'List of modules to enable.'
+			'List of modules to disable.'
 		);
 	}
 
@@ -47,7 +47,7 @@ class ConfigEnableCommand extends AbstractCommand
 		$settings = $this->createSettings($input, $output);
 		$endpoint = $this->createEndpoint($settings);
 
-		$result = $endpoint->config->enable($modules);
+		$result = $endpoint->config->disable($modules);
 
 		$this->outputErrors($result, $output);
 
