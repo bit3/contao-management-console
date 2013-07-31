@@ -35,17 +35,17 @@ class connect
 		ob_start();
 		error_reporting(E_ALL ^ E_NOTICE);
 
-		if (defined('CONTAO_MANAGEMENT_API_LOG')) {
+		if (defined('COMACO_LOG')) {
 			$log = 'contao-management-api';
-			if (defined('CONTAO_MANAGEMENT_API_LOG_NAME')) {
-				$log = CONTAO_MANAGEMENT_API_LOG_NAME;
+			if (defined('COMACO_LOG_NAME')) {
+				$log = COMACO_LOG_NAME;
 			}
 
 			$logger = new Logger($log);
 			$logger->pushHandler(
 				new StreamHandler(
-					CONTAO_MANAGEMENT_API_LOG,
-					CONTAO_MANAGEMENT_API_LOG_LEVEL
+					COMACO_LOG,
+					COMACO_LOG_LEVEL
 				)
 			);
 		}
@@ -61,14 +61,14 @@ class connect
 
 		$settings = new Settings();
 
-		if (defined('CONTAO_MANAGEMENT_API_CONTAO_PATH')) {
-			$settings->setPath(CONTAO_MANAGEMENT_API_CONTAO_PATH);
+		if (defined('COMACO_CONTAO_PATH')) {
+			$settings->setPath(COMACO_CONTAO_PATH);
 		}
-		if (defined('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY')) {
-			$settings->setRsaLocalPrivateKey(CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY);
+		if (defined('COMACO_RSA_LOCAL_PRIVATE_KEY')) {
+			$settings->setRsaLocalPrivateKey(COMACO_RSA_LOCAL_PRIVATE_KEY);
 		}
-		if (defined('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY')) {
-			$settings->setRsaRemotePublicKey(CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY);
+		if (defined('COMACO_RSA_REMOTE_PUBLIC_KEY')) {
+			$settings->setRsaRemotePublicKey(COMACO_RSA_REMOTE_PUBLIC_KEY);
 		}
 
 		$factory  = new EndpointFactory();

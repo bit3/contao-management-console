@@ -26,6 +26,7 @@
 		"filicious/core": "0.9.*"
 	},
 	"require-dev": {
+		"symfony/process": "2.3.*",
 		"phpunit/phpunit":"3.7.*",
 		"bit3/php-coding-standard":"2.*"
 	},

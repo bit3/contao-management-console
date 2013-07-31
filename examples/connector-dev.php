@@ -16,13 +16,13 @@
 
 chdir(dirname(__FILE__));
 
-define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . '/' . basename(__FILE__, '.php') . '.log');
-define('CONTAO_MANAGEMENT_API_LOG_LEVEL', 100);
-define('CONTAO_MANAGEMENT_API_CONTAO_PATH', dirname(dirname(__FILE__)));
-define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', file_get_contents(
+define('COMACO_LOG', dirname(__FILE__) . '/' . basename(__FILE__, '.php') . '.log');
+define('COMACO_LOG_LEVEL', 100);
+define('COMACO_CONTAO_PATH', dirname(dirname(__FILE__)));
+define('COMACO_RSA_LOCAL_PRIVATE_KEY', file_get_contents(
 	'/path/to/contao-management-api/test/client.key'
 ));
-define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', file_get_contents(
+define('COMACO_RSA_REMOTE_PUBLIC_KEY', file_get_contents(
 	'/path/to/contao-management-api/test/server.pub'
 ));
 

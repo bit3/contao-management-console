@@ -26,14 +26,34 @@ use Composer\Autoload\ClassLoader;
 use Filicious\File;
 use Filicious\Filesystem;
 use Filicious\Local\LocalAdapter;
+use Symfony\Component\Process\Process;
 use Traversable;
 
 class BundlerPackCommand extends Command
 {
 	/**
+	 * @var InputInterface
+	 */
+	protected $input;
+
+	/**
 	 * @var OutputInterface
 	 */
 	protected $output;
+
+	/**
+	 * The contao management console's version
+	 *
+	 * @var string
+	 */
+	protected $version;
+
+	/**
+	 * The contao management console's version date
+	 *
+	 * @var string
+	 */
+	protected $date;
 
 	/**
 	 * @var string
@@ -46,34 +66,19 @@ class BundlerPackCommand extends Command
 	protected $vendorDir;
 
 	/**
+	 * @var string
+	 */
+	protected $ownpath;
+
+	/**
+	 * @var \Phar
+	 */
+	protected $phar;
+
+	/**
 	 * @var Filesystem
 	 */
 	protected $filesystem;
-
-	/**
-	 * @var ClassLoader
-	 */
-	protected $classLoader;
-
-	/**
-	 * @var array
-	 */
-	protected $addedFiles;
-
-	/**
-	 * @var array
-	 */
-	protected $interfaces;
-
-	/**
-	 * @var array
-	 */
-	protected $classes;
-
-	/**
-	 * @var array
-	 */
-	protected $others;
 
 	protected function configure()
 	{
@@ -146,6 +151,7 @@ class BundlerPackCommand extends Command
 	{
 		$out = $input->getOption('output');
 
+		$this->input = $input;
 		if ($out == 'php://stdout') {
 			$this->output = $output->getErrorOutput();
 		}
@@ -153,117 +159,184 @@ class BundlerPackCommand extends Command
 			$this->output = $output;
 		}
 
-		$this->basepath = dirname(dirname(dirname(__DIR__)));
+		$this->detectPaths();
+		$this->detectSelfVersion();
+		$this->initializePhar($out);
+		$this->createPhar();
+		$this->finalizePhar($out);
+	}
 
-		if (is_file(__DIR__ . '/../../../vendor/autoload.php')) {
-			$this->vendorDir = dirname(dirname(dirname(__DIR__))) . '/vendor';
-		}
-		else if (is_file(__DIR__ . '/../../../../../../vendor/autoload.php')) {
-			$this->vendorDir = dirname(dirname(dirname(dirname(dirname(dirname(__DIR__)))))) . '/vendor';
-		}
-		else {
-			throw new Exception('Could not find vendor dir!');
+	protected function detectPaths()
+	{
+		$dir = __DIR__;
+
+		while ($dir && $dir != '.' && $dir != '/' && !is_file($dir . '/vendor/autoload.php')) {
+			$dir = dirname($dir);
 		}
 
-		$this->output->writeln(' <info>*</info> Bundle files from ' . $this->basepath);
+		if (!is_file($dir . '/vendor/autoload.php')) {
+			throw new \RuntimeException('Could not find vendor/autoload.php');
+		}
+
+		$ownpath = __DIR__;
+
+		while ($ownpath && $ownpath != '.' && $ownpath != '/' && !is_file($ownpath . '/composer.json')) {
+			$ownpath = dirname($ownpath);
+		}
+
+		if (!is_file($ownpath . '/composer.json')) {
+			throw new \RuntimeException('Could not find own composer.json');
+		}
+
+		$this->basepath = $dir;
+		$this->vendorDir = $dir . '/vendor';
+		$this->ownpath = $ownpath;
 
 		$this->filesystem = new Filesystem(new LocalAdapter('/'));
+	}
 
-		$this->addedFiles = array();
-		$this->interfaces = array();
-		$this->classes    = array();
-		$this->others     = array();
+	protected function detectSelfVersion()
+	{
+		$process = new Process('git log --pretty="%H" -n1 HEAD', __DIR__);
+		if ($process->run() != 0) {
+			throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from git repository clone and that git binary is available.');
+		}
+		$this->version = trim($process->getOutput());
 
-		$autoloaders       = spl_autoload_functions();
-		$this->classLoader = null;
-		foreach ($autoloaders as $autoloader) {
-			if (is_array($autoloader) && $autoloader[0] instanceof ClassLoader) {
-				$this->classLoader = $autoloader[0];
-				break;
+		$process = new Process('git log --pretty="%ai" -n1 HEAD', __DIR__);
+		if ($process->run() != 0) {
+			throw new \RuntimeException('Can\'t run git log. You must ensure to run compile from composer git repository clone and that git binary is available.');
+		}
+		$this->date = trim($process->getOutput());
+
+		$process = new Process('git describe --tags HEAD');
+		if ($process->run() == 0) {
+			$this->version = trim($process->getOutput());
+		}
+	}
+
+	protected function initializePhar($filename)
+	{
+		if ($filename != 'php://stdout') {
+			if (file_exists($filename)) {
+				unlink($filename);
 			}
 		}
-		if (!$this->classLoader) {
-			throw new \Exception('Could not find class loader.');
+		$this->phar = new \Phar($filename);
+		$this->phar->setSignatureAlgorithm(\Phar::SHA1);
+
+		$this->phar->startBuffering();
+	}
+
+	protected function createPhar()
+	{
+		$composerJsonFile = $this->filesystem->getFile($this->ownpath . '/composer.json');
+		$composerJson     = $composerJsonFile->getContents();
+		$composerConfig   = json_decode($composerJson);
+
+		$src = $this->filesystem->getFile($this->ownpath . '/src');
+		$this->addFilesFrom($src, 'src');
+
+		foreach ($composerConfig->require as $packageName => $packageConstraint) {
+			if ($packageName == 'php') {
+				continue;
+			}
+
+			$packageDir = $this->filesystem->getFile($this->vendorDir . '/' . $packageName);
+
+			if ($packageDir->isDirectory()) {
+				$this->addFilesFrom($packageDir, 'vendor/' . $packageName);
+			}
+			else {
+				$this->output->writeln(
+					' <comment>*</comment> Package ' . $packageName . ' does not exist in ' . $packageDir->getPathname()
+				);
+			}
 		}
 
-		// add src files and autodiscover dependencies
-		$this->output->writeln(' <info>*</info> Adding management api files');
-
-		$srcDir   = $this->filesystem->getFile($this->basepath . '/src');
-		$iterator = $srcDir->getIterator(
-			File::LIST_RECURSIVE,
-			function ($pathname) {
-				return strpos($pathname, '/Console/') === false;
-			}
-		);
-		$this->addFiles($iterator);
-
-		// add hard coded dependencies, that cannot be autodiscovered
-		$this->addFile($this->filesystem->getFile($this->vendorDir . '/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
 		$this->addFile(
-			$this->filesystem->getFile($this->vendorDir . '/filicious/filicious/src/Filicious/Stream/StreamWrapper.php')
+			$this->filesystem->getFile($this->ownpath . '/scripts/error_handler.php'),
+			'scripts/error_handler.php'
 		);
+		$this->addFile($this->filesystem->getFile($this->ownpath . '/bin/contaoctl'), 'bin/contaoctl.php', true);
+		$this->addFile($this->filesystem->getFile($this->ownpath . '/scripts/connect.php'), 'scripts/connect.php');
+		$this->addFile($this->filesystem->getFile($this->vendorDir . '/autoload.php'), 'vendor/autoload.php');
+		$this->addFilesFrom($this->filesystem->getFile($this->vendorDir . '/composer'), 'vendor/composer');
+	}
 
-		// sort files
-		$this->interfaces = $this->sortFiles($this->interfaces);
-		$this->classes    = $this->sortFiles($this->classes);
+	protected function addFilesFrom(File $directory, $into)
+	{
+		$this->output->writeln(' <info>*</info> Add php files from ' . $directory->getPathname());
 
-		// add error handler
-		$errorHandlerFile = $this->filesystem->getFile($this->basepath . '/scripts/error_handler.php');
-		$this->addDependencies($errorHandlerFile);
-		$this->others[] = $errorHandlerFile;
+		$files = $directory->getIterator(File::LIST_RECURSIVE);
 
-		// add execution script
-		$runScriptFile = $this->filesystem->getFile($this->basepath . '/scripts/connect.php');
-		$this->addDependencies($runScriptFile);
-		$this->others[] = $runScriptFile;
+		/** @var File $file */
+		foreach ($files as $file) {
+			if (fnmatch('*.php', $file->getPathname()) &&
+				!fnmatch('*/test/*', $file->getPathname()) &&
+				!fnmatch('*/tests/*', $file->getPathname()) &&
+				$file->getBasename() != 'BundlerPackCommand.php'
+			) {
+				$path = $into . '/' . ltrim(
+						str_replace($directory->getPathname(), '', $file->getPathname()),
+						'/'
+					);
 
-		$this->output->writeln(
-			sprintf(
-				' <info>*</info> Bundled %d interfaces, %d classes and %d other resource',
-				count($this->interfaces),
-				count($this->classes),
-				count($this->others)
-			)
-		);
+				$this->addFile($file, $path);
+			}
+		}
+	}
 
-		// create buffer
-		$buffer = fopen($out, 'wb');
-		fwrite(
-			$buffer,
-			<<<EOF
+	protected function addFile(File $file, $path, $stripBin = false)
+	{
+		$this->output->writeln(' <info>*</info> Add php file ' . $path);
+
+		$content = $file->getContents();
+
+		if ($stripBin) {
+			$content = preg_replace('~^#!/usr/bin/env php\s*~', '', $content);
+			$content = str_replace('$application->add(new BundlerPackCommand);', '', $content);
+		}
+
+		$this->phar->addFromString($path, $content);
+	}
+
+	protected function finalizePhar($filename)
+	{
+		$stub = $this->createStub($filename);
+
+		$this->phar->stopBuffering();
+		$this->phar->setStub($stub);
+	}
+
+	protected function createStub($filename)
+	{
+		$basename = basename($filename);
+		$version  = var_export($this->version, true);
+		$date     = var_export($this->date, true);
+
+		$stub = <<<EOF
+#!/usr/bin/env php
 <?php
-
-/**
- * This file contains a bunch of files, bundled into one single file.
- *
- * See http://contao-cloud.com for more details about this script
- * and all scripts used to generate this bundle.
+/*
+ * This file is a build of the Management Console for Contao Open Source CMS
  */
 
+Phar::mapPhar('$basename');
 
-EOF
-		);
+define('COMACO_VERSION', {$version});
+define('COMACO_DATE', {$date});
 
-		$privateKeyFile = $input->getOption('private-key-file');
-		$privateKey     = $input->getOption('private-key');
-		$publicKeyFile  = $input->getOption('public-key-file');
-		$publicKey      = $input->getOption('public-key');
-		$contaoPath     = $input->getOption('contao-path');
-		$log            = $input->getOption('log');
-		$logName        = $input->getOption('log-name');
-		$logLevel       = $input->getOption('log-level');
+EOF;
 
-		// add files to buffer
-		foreach ($this->interfaces as $interface) {
-			$this->writeFile($interface->file, $buffer);
-		}
-		foreach ($this->classes as $class) {
-			$this->writeFile($class->file, $buffer);
-		}
-
-		// add global namespace
-		fwrite($buffer, "namespace {\n");
+		$privateKeyFile = $this->input->getOption('private-key-file');
+		$privateKey     = $this->input->getOption('private-key');
+		$publicKeyFile  = $this->input->getOption('public-key-file');
+		$publicKey      = $this->input->getOption('public-key');
+		$contaoPath     = $this->input->getOption('contao-path');
+		$log            = $this->input->getOption('log');
+		$logName        = $this->input->getOption('log-name');
+		$logLevel       = $this->input->getOption('log-level');
 
 		// add constants to buffer
 		if ($privateKeyFile && file_exists($privateKeyFile)) {
@@ -274,13 +347,10 @@ EOF
 
 			$privateKey = var_export($privateKey, true);
 
-			fwrite(
-				$buffer,
-				<<<EOF
-				define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $privateKey);
+			$stub .= <<<EOF
+define('COMACO_RSA_LOCAL_PRIVATE_KEY', $privateKey);
 
-EOF
-			);
+EOF;
 		}
 
 		if ($publicKeyFile && file_exists($publicKeyFile)) {
@@ -291,23 +361,17 @@ EOF
 
 			$publicKey = var_export($publicKey, true);
 
-			fwrite(
-				$buffer,
-				<<<EOF
-				define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $publicKey);
+			$stub .= <<<EOF
+define('COMACO_RSA_REMOTE_PUBLIC_KEY', $publicKey);
 
-EOF
-			);
+EOF;
 		}
 
 		$contaoPath = var_export('/' . $contaoPath, true);
-		fwrite(
-			$buffer,
-			<<<EOF
-			define('CONTAO_MANAGEMENT_API_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
+		$stub .= <<<EOF
+define('COMACO_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
 
-EOF
-		);
+EOF;
 
 		if ($log) {
 			$this->output->writeln(' <info>*</info> Activate logging to ' . $log);
@@ -323,323 +387,36 @@ EOF
 				$logLevel = (int) $logLevel;
 			}
 
-			fwrite(
-				$buffer,
-				<<<EOF
-				define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . $log);
-define('CONTAO_MANAGEMENT_API_LOG_LEVEL', $logLevel);
+			$stub .= <<<EOF
+define('COMACO_LOG', dirname(__FILE__) . $log);
+define('COMACO_LOG_LEVEL', $logLevel);
 
-EOF
-			);
+EOF;
 
 			if ($logName != 'contao-management-api') {
 				$logName = var_export($logName, true);
-				fwrite(
-					$buffer,
-					<<<EOF
-					define('CONTAO_MANAGEMENT_API_LOG_NAME', $logName);
+				$stub .= <<<EOF
+define('COMACO_LOG_NAME', $logName);
 
-EOF
-				);
+EOF;
 			}
 		}
 
-		// add non-namespace files to buffer
-		foreach ($this->others as $file) {
-			$this->writeFile($file, $buffer, false);
-		}
 
-		// close global namespace
-		fwrite($buffer, "}\n");
+		$stub .= <<<EOF
 
-		// output the bundled script
-		fflush($buffer);
-		fclose($buffer);
-	}
+require 'phar://$basename/scripts/error_handler.php';
 
-	public function normaliseClassName($className)
-	{
-		$parts = explode('\\', $className);
-		$parts = array_filter($parts);
-		return implode('\\', $parts);
-	}
+if (PHP_SAPI == 'cli') {
+	require 'phar://$basename/bin/contaoctl.php';
+}
+else {
+	require 'phar://$basename/scripts/connect.php';
+}
 
-	protected function addDirectories($path)
-	{
-		$dir      = $this->filesystem->getFile($path);
-		$iterator = $dir->getIterator(
-			File::LIST_RECURSIVE
-		);
-		$this->addFiles($iterator);
-	}
+__HALT_COMPILER();
+EOF;
 
-	/**
-	 * @param array    $files
-	 * @param resource $buffer
-	 */
-	protected function addFiles(Traversable $iterator)
-	{
-		foreach ($iterator as $file) {
-			$this->addFile(
-				$file
-			);
-		}
-	}
-
-	/**
-	 * @param array    $files
-	 * @param resource $buffer
-	 */
-	protected function addFile(File $file, $dependency = false)
-	{
-		if (in_array($file->getPathname(), $this->addedFiles)) {
-			return;
-		}
-		$this->addedFiles[] = $file->getPathname();
-
-		$this->output->writeln(
-			sprintf(
-				' <info>*</info> Add %s %s',
-				$dependency ? 'dependency' : 'file',
-				$file->getPathname()
-			)
-		);
-
-		$content = $file->getContents();
-
-		if (preg_match(
-			'#((?:abstract\s+)?class|interface)\s+([^\s]+)\s+(?:extends(.*))?(?:implements(.*))?\{#sU',
-			$content,
-			$match
-		)
-		) {
-			$name    = trim($match[2]);
-			$extends = array();
-
-			if (isset($match[3])) {
-				$extends = explode(',', $match[3]);
-				$extends = array_map('trim', $extends);
-				$extends = array_filter($extends);
-			}
-
-			if (isset($match[4])) {
-				$implements = explode(',', $match[4]);
-				$implements = array_map('trim', $implements);
-				$implements = array_filter($implements);
-				// handle implements same as extends
-				$extends = array_merge($extends, $implements);
-			}
-
-			$isInterface = $match[1] == 'interface';
-			$isAbstract  = $match[1] == 'abstract class';
-
-			if (preg_match('#namespace ([^;]+);#', $content, $match)) {
-				$namespace = static::normaliseClassName($match[1]);
-				$name      = $namespace . '\\' . $name;
-			}
-			else {
-				$namespace = '';
-			}
-
-			$uses = $this->addDependencies($file, $namespace);
-
-			foreach ($extends as $k => $v) {
-				if (isset($uses[$v])) {
-					$extends[$k] = static::normaliseClassName($uses[$v]);
-				}
-				else if ($namespace && $v[0] !== '\\') {
-					$extends[$k] = static::normaliseClassName($namespace . '\\' . $v);
-				}
-				else {
-					$extends[$k] = static::normaliseClassName($v);
-				}
-			}
-
-			$item = (object) array(
-				'namespace'   => $namespace,
-				'name'        => $name,
-				'file'        => $file,
-				'extends'     => $extends,
-				'isInterface' => $isInterface,
-				'isAbstract'  => $isAbstract
-			);
-
-			if ($isInterface) {
-				$this->interfaces[$item->name] = $item;
-			}
-			else {
-				$this->classes[$item->name] = $item;
-			}
-
-			foreach ($extends as $extendsClass) {
-				$extendsFilename = $this->classLoader->findFile($extendsClass);
-				if ($extendsFilename) {
-					$extendsFile = $this->filesystem->getFile($extendsFilename);
-					$this->addFile($extendsFile, true);
-				}
-				else if (!class_exists($extendsClass, false)) {
-					$this->output->writeln(' <error>*</error> Missing dependency ' . $extendsClass);
-				}
-			}
-		}
-		else {
-			$this->addDependencies($file);
-
-			$this->others[] = $file;
-		}
-	}
-
-	protected function addDependencies(File $file, $namespace = '\\')
-	{
-		$content = $file->getContents();
-
-		$uses = array();
-		if (
-		preg_match_all(
-			'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
-			$content,
-			$matches,
-			PREG_SET_ORDER
-		)
-		) {
-			foreach ($matches as $use) {
-				$useClass = static::normaliseClassName($use[1]);
-				$useName  = static::normaliseClassName(
-					isset($use[2])
-						? trim($use[2])
-						: preg_replace('#^.*\\\\([^\\\\]*?)$#', '$1', $use[1])
-				);
-
-				$uses[$useName] = $useClass;
-			}
-		}
-
-		foreach ($uses as $useClass) {
-			$useFilename = $this->classLoader->findFile($useClass);
-			if ($useFilename) {
-				$useFile = $this->filesystem->getFile($useFilename);
-				$this->addFile($useFile, true);
-			}
-			else if (!class_exists($useClass, false)) {
-				$this->output->writeln(' <error>*</error> Missing dependency ' . $useClass);
-			}
-		}
-
-		// remove comments before analyse code
-		$content = preg_replace(
-			'#//.*#',
-			'',
-			$content
-		);
-		$content = preg_replace(
-			'#/\*.*\*/#sU',
-			'',
-			$content
-		);
-
-		// search instantiations and static calls
-		if (
-		preg_match_all(
-			'#new ([\\\\\w]+)\(|([\\\\\w]+)::#',
-			$content,
-			$matches,
-			PREG_SET_ORDER
-		)
-		) {
-			foreach ($matches as $instantiation) {
-				$instantiationClass = isset($instantiation[2]) ? $instantiation[2] : $instantiation[1];
-				if (
-					$instantiationClass == 'self' ||
-					$instantiationClass == 'static' ||
-					$instantiationClass == 'parent'
-				) {
-					continue;
-				}
-				if (isset($uses[$instantiationClass])) {
-					$instantiationClass = static::normaliseClassName($uses[$instantiationClass]);
-				}
-				else if ($namespace && $instantiationClass[0] !== '\\') {
-					$instantiationClass = static::normaliseClassName($namespace . '\\' . $instantiationClass);
-				}
-				else {
-					$instantiationClass = static::normaliseClassName($instantiationClass);
-				}
-				$instantiationFilename = $this->classLoader->findFile($instantiationClass);
-				if ($instantiationFilename) {
-					$instantiationFile = $this->filesystem->getFile($instantiationFilename);
-					$this->addFile($instantiationFile, true);
-				}
-				else if (!class_exists($instantiationClass, false)) {
-					$this->output->writeln(' <error>*</error> Missing dependency ' . $instantiationClass);
-				}
-			}
-		}
-
-		return $uses;
-	}
-
-	protected function sortFiles(array $classes)
-	{
-		$result = array();
-
-		while (count($classes)) {
-			$class = array_shift($classes);
-
-			if (count($class->extends)) {
-				foreach ($class->extends as $extend) {
-					// skip dependency, because this is not a vendor class
-					if (!isset($classes[$extend])) {
-						continue;
-					}
-
-					// skip class and add later, because this dependency is not added yet
-					if (!isset($result[$extend])) {
-						$classes[$class->name] = $class;
-						continue 2;
-					}
-				}
-			}
-
-			$result[$class->name] = $class;
-		}
-
-		return $result;
-	}
-
-	/**
-	 * @param array    $files
-	 * @param resource $buffer
-	 */
-	protected function writeFile(File $file, $buffer, $fallbackToGlobalNamespace = true)
-	{
-		if ($file->isFile()) {
-			$content = $file->getContents();
-
-			// remove php tags
-			$content = str_replace(
-				array('<?php', '?>'),
-				'',
-				$content
-			);
-
-			$content = trim($content);
-
-			// encapsulate namespace into {} block
-			if (preg_match('#(namespace [\w\d\\\\]+);#', $content)) {
-				$content = preg_replace(
-					'#(namespace [\w\d\\\\]+);#',
-					'$1 {',
-					$content
-				);
-				$content .= "\n}\n";
-			}
-			else if ($fallbackToGlobalNamespace) {
-				$content = "namespace {\n" . $content . "\n}\n";
-			}
-
-			fwrite($buffer, "\n");
-			fwrite($buffer, '// source ' . $file->getPathname() . "\n\n");
-			fwrite($buffer, $content . "\n");
-		}
+		return $stub;
 	}
 }
