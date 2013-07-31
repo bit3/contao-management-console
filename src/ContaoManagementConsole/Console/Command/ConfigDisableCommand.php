@@ -34,10 +34,10 @@ class ConfigDisableCommand extends AbstractCommand
 			->setName('config:disable')
 			->setDescription('Disable modules.')
 			->addArgument(
-			'modules',
-			InputArgument::IS_ARRAY,
-			'List of modules to disable.'
-		);
+				'modules',
+				InputArgument::IS_ARRAY,
+				'List of modules to disable.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

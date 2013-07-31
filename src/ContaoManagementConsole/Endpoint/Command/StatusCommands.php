@@ -24,13 +24,13 @@ class StatusCommands extends AbstractCommands
 	public function summary()
 	{
 		$status = (object) array(
-			'version'            => -1,
-			'build'              => -1,
-			'lts'                => false,
-			'modules'            => array(),
-			'disabledModules'    => array(),
-			'extensions'         => new \stdClass(),
-			'users'              => array()
+			'version'         => -1,
+			'build'           => -1,
+			'lts'             => false,
+			'modules'         => array(),
+			'disabledModules' => array(),
+			'extensions'      => new \stdClass(),
+			'users'           => array()
 		);
 
 		if ($this->prepareFilesystemAccess()) {
@@ -57,7 +57,12 @@ class StatusCommands extends AbstractCommands
 				if (preg_match('#define\(\s*["\']BUILD["\']\s*,\s*["\']([^"\']+)["\']\s*\)#', $constants, $match)) {
 					$status->build = $match[1];
 				}
-				if (preg_match('#define\(\s*["\']LONG_TERM_SUPPORT["\']\s*,\s*(true|false)\s*\)#', $constants, $match)) {
+				if (preg_match(
+					'#define\(\s*["\']LONG_TERM_SUPPORT["\']\s*,\s*(true|false)\s*\)#',
+					$constants,
+					$match
+				)
+				) {
 					$status->lts = $match[1] == 'true';
 				}
 			}
@@ -92,17 +97,23 @@ class StatusCommands extends AbstractCommands
 
 				if ($this->prepareDatabaseConnection()) {
 					/* Read installed extension versions */
-					$tablesStatement = $this->dbConnection->query('SHOW TABLES LIKE "tl_repository_installs";', PDO::FETCH_NUM);
+					$tablesStatement = $this->dbConnection->query(
+						'SHOW TABLES LIKE "tl_repository_installs";',
+						PDO::FETCH_NUM
+					);
 					if (!$tablesStatement->rowCount()) {
 						$this->errors[] = 'The table tl_repository_installs does not exists, could not detect versions of installed extensions!';
 					}
 					else {
 						$extensions = array();
-						$installs = $this->dbConnection->query('SELECT * FROM tl_repository_installs', PDO::FETCH_OBJ);
+						$installs   = $this->dbConnection->query(
+							'SELECT * FROM tl_repository_installs',
+							PDO::FETCH_OBJ
+						);
 						foreach ($installs as $install) {
-							$major = intval($install->version / 10000000);
-							$minor = intval($install->version / 10000) % 1000;
-							$release = intval($install->version / 10) % 1000;
+							$major     = intval($install->version / 10000000);
+							$minor     = intval($install->version / 10000) % 1000;
+							$release   = intval($install->version / 10) % 1000;
 							$stability = $install->version % 10;
 
 							$extensions[$install->extension] = (object) array(
@@ -130,13 +141,15 @@ class StatusCommands extends AbstractCommands
 						$this->errors[] = 'The table tl_user does not exists, could not find users!';
 					}
 					else {
-						$status->users = $this->dbConnection->query(
+						$status->users = $this->dbConnection
+							->query(
 							'SELECT id,username,name,email,admin,locked,currentLogin,
 							     IF(disable OR start!="" AND start>UNIX_TIMESTAMP() OR stop!="" AND stop<UNIX_TIMESTAMP(), 1, "") AS disabled
 							 FROM tl_user
 							 ORDER BY username',
 							PDO::FETCH_OBJ
-						)->fetchAll();
+						)
+							->fetchAll();
 					}
 				}
 			}

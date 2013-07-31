@@ -34,26 +34,26 @@ class ConfigSetCommand extends AbstractCommand
 			->setName('config:set')
 			->setDescription('Set a config entry.')
 			->addArgument(
-			'key',
-			InputArgument::REQUIRED,
-			'The config entry key name.'
-		)
+				'key',
+				InputArgument::REQUIRED,
+				'The config entry key name.'
+			)
 			->addArgument(
-			'value',
-			InputArgument::REQUIRED,
-			'The config entry key value.'
-		)
-		->addOption(
-			'json-value',
-			'j',
-			InputOption::VALUE_NONE,
-			'The value is a json string and must be decoded before set. Use this if you try to set arrays.'
-		);
+				'value',
+				InputArgument::REQUIRED,
+				'The config entry key value.'
+			)
+			->addOption(
+				'json-value',
+				'j',
+				InputOption::VALUE_NONE,
+				'The value is a json string and must be decoded before set. Use this if you try to set arrays.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$key = $input->getArgument('key');
+		$key   = $input->getArgument('key');
 		$value = $input->getArgument('value');
 
 		if ($input->getOption('json-value')) {

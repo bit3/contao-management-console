@@ -31,10 +31,10 @@ class ConfigGetCommand extends AbstractCommand
 			->setName('config:get')
 			->setDescription('Get a config entry.')
 			->addArgument(
-			'key',
-			InputArgument::REQUIRED,
-			'The config entry key name.'
-		);
+				'key',
+				InputArgument::REQUIRED,
+				'The config entry key name.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

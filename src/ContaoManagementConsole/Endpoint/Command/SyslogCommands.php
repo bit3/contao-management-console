@@ -26,10 +26,10 @@ class SyslogCommands extends AbstractCommands
 		$syslog = array();
 
 		if ($this->prepareDatabaseConnection()) {
-			$query = 'SELECT * FROM tl_log';
+			$query       = 'SELECT * FROM tl_log';
 			$queryParams = array();
 
-			$limit = 100;
+			$limit  = 100;
 			$offset = 0;
 
 			if (!empty($filter)) {
@@ -44,10 +44,10 @@ class SyslogCommands extends AbstractCommands
 					}
 
 					// search for day $on +- 12 hours to handle different time zone settings
-					$whereParts[] = 'tstamp >= :on-begin';
-					$whereParts[] = 'tstamp <= :on-end';
+					$whereParts[]             = 'tstamp >= :on-begin';
+					$whereParts[]             = 'tstamp <= :on-end';
 					$queryParams[':on-begin'] = array($on - 43200, PDO::PARAM_INT);
-					$queryParams[':on-end'] = array($on + 43200, PDO::PARAM_INT);
+					$queryParams[':on-end']   = array($on + 43200, PDO::PARAM_INT);
 				}
 
 				if (isset($filter->since)) {
@@ -58,7 +58,7 @@ class SyslogCommands extends AbstractCommands
 						$since = strtotime($filter->since);
 					}
 
-					$whereParts[] = 'tstamp >= :since';
+					$whereParts[]          = 'tstamp >= :since';
 					$queryParams[':since'] = array($since, PDO::PARAM_INT);
 				}
 
@@ -70,32 +70,32 @@ class SyslogCommands extends AbstractCommands
 						$until = strtotime($filter->until);
 					}
 
-					$whereParts[] = 'tstamp <= :until';
+					$whereParts[]          = 'tstamp <= :until';
 					$queryParams[':until'] = array($until, PDO::PARAM_INT);
 				}
 
 				if (isset($filter->source)) {
-					$whereParts[] = 'source = :source';
+					$whereParts[]           = 'source = :source';
 					$queryParams[':source'] = array(strtoupper($filter->source));
 				}
 
 				if (isset($filter->action)) {
-					$whereParts[] = 'action = :action';
+					$whereParts[]           = 'action = :action';
 					$queryParams[':action'] = array(strtoupper($filter->action));
 				}
 
 				if (isset($filter->username)) {
-					$whereParts[] = 'username = :username';
+					$whereParts[]             = 'username = :username';
 					$queryParams[':username'] = array(strtoupper($filter->username));
 				}
 
 				if (isset($filter->func)) {
-					$whereParts[] = 'func = :func';
+					$whereParts[]         = 'func = :func';
 					$queryParams[':func'] = array(strtoupper($filter->func));
 				}
 
 				if (isset($filter->ip)) {
-					$whereParts[] = 'ip = :ip';
+					$whereParts[]       = 'ip = :ip';
 					$queryParams[':ip'] = array(strtoupper($filter->ip));
 				}
 

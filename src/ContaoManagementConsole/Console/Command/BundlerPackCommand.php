@@ -83,68 +83,68 @@ class BundlerPackCommand extends Command
 			->setName('bundler:pack')
 			->setDescription('Create bundled executable')
 			->addOption(
-			'output',
-			'o',
-			InputOption::VALUE_REQUIRED,
-			'Write to file instead of stdout',
-			'php://stdout'
-		)
+				'output',
+				'o',
+				InputOption::VALUE_REQUIRED,
+				'Write to file instead of stdout',
+				'php://stdout'
+			)
 			->addOption(
-			'private-key-file',
-			'K',
-			InputOption::VALUE_REQUIRED,
-			'Path to the private key file'
-		)
+				'private-key-file',
+				'K',
+				InputOption::VALUE_REQUIRED,
+				'Path to the private key file'
+			)
 			->addOption(
-			'private-key',
-			null,
-			InputOption::VALUE_REQUIRED,
-			'The private key'
-		)
+				'private-key',
+				null,
+				InputOption::VALUE_REQUIRED,
+				'The private key'
+			)
 			->addOption(
-			'public-key-file',
-			'P',
-			InputOption::VALUE_REQUIRED,
-			'Path to the public key file'
-		)
+				'public-key-file',
+				'P',
+				InputOption::VALUE_REQUIRED,
+				'Path to the public key file'
+			)
 			->addOption(
-			'public-key',
-			null,
-			InputOption::VALUE_REQUIRED,
-			'The public key'
-		)
+				'public-key',
+				null,
+				InputOption::VALUE_REQUIRED,
+				'The public key'
+			)
 			->addOption(
-			'contao-path',
-			'p',
-			InputOption::VALUE_REQUIRED,
-			'Relative path from the management api to the contao installation base path',
-			'../'
-		)
+				'contao-path',
+				'p',
+				InputOption::VALUE_REQUIRED,
+				'Relative path from the management api to the contao installation base path',
+				'../'
+			)
 			->addOption(
-			'log',
-			'l',
-			InputOption::VALUE_REQUIRED,
-			'Relative path from the management api to the log file (e.g. connect.log)'
-		)
+				'log',
+				'l',
+				InputOption::VALUE_REQUIRED,
+				'Relative path from the management api to the log file (e.g. connect.log)'
+			)
 			->addOption(
-			'log-name',
-			'N',
-			InputOption::VALUE_REQUIRED,
-			'Logger name',
-			'contao-management-api'
-		)
+				'log-name',
+				'N',
+				InputOption::VALUE_REQUIRED,
+				'Logger name',
+				'contao-management-api'
+			)
 			->addOption(
-			'log-level',
-			'L',
-			InputOption::VALUE_REQUIRED,
-			'Set the log level [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]',
-			'ERROR'
-		);
+				'log-level',
+				'L',
+				InputOption::VALUE_REQUIRED,
+				'Set the log level [DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL, ALERT, EMERGENCY]',
+				'ERROR'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
 	{
-		$out    = $input->getOption('output');
+		$out = $input->getOption('output');
 
 		if ($out == 'php://stdout') {
 			$this->output = $output->getErrorOutput();
@@ -174,7 +174,7 @@ class BundlerPackCommand extends Command
 		$this->classes    = array();
 		$this->others     = array();
 
-		$autoloaders = spl_autoload_functions();
+		$autoloaders       = spl_autoload_functions();
 		$this->classLoader = null;
 		foreach ($autoloaders as $autoloader) {
 			if (is_array($autoloader) && $autoloader[0] instanceof ClassLoader) {
@@ -200,7 +200,9 @@ class BundlerPackCommand extends Command
 
 		// add hard coded dependencies, that cannot be autodiscovered
 		$this->addFile($this->fs->getFile($this->vendorDir . '/phpseclib/phpseclib/phpseclib/Crypt/Random.php'));
-		$this->addFile($this->fs->getFile($this->vendorDir . '/filicious/filicious/src/Filicious/Stream/StreamWrapper.php'));
+		$this->addFile(
+			$this->fs->getFile($this->vendorDir . '/filicious/filicious/src/Filicious/Stream/StreamWrapper.php')
+		);
 
 		// sort files
 		$this->interfaces = $this->sortFiles($this->interfaces);
@@ -244,13 +246,13 @@ EOF
 		);
 
 		$privateKeyFile = $input->getOption('private-key-file');
-		$privateKey = $input->getOption('private-key');
-		$publicKeyFile = $input->getOption('public-key-file');
-		$publicKey = $input->getOption('public-key');
-		$contaoPath = $input->getOption('contao-path');
-		$log = $input->getOption('log');
-		$logName = $input->getOption('log-name');
-		$logLevel = $input->getOption('log-level');
+		$privateKey     = $input->getOption('private-key');
+		$publicKeyFile  = $input->getOption('public-key-file');
+		$publicKey      = $input->getOption('public-key');
+		$contaoPath     = $input->getOption('contao-path');
+		$log            = $input->getOption('log');
+		$logName        = $input->getOption('log-name');
+		$logLevel       = $input->getOption('log-level');
 
 		// add files to buffer
 		foreach ($this->interfaces as $interface) {
@@ -272,8 +274,10 @@ EOF
 
 			$privateKey = var_export($privateKey, true);
 
-			fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $privateKey);
+			fwrite(
+				$buffer,
+				<<<EOF
+				define('CONTAO_MANAGEMENT_API_RSA_LOCAL_PRIVATE_KEY', $privateKey);
 
 EOF
 			);
@@ -287,16 +291,20 @@ EOF
 
 			$publicKey = var_export($publicKey, true);
 
-			fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $publicKey);
+			fwrite(
+				$buffer,
+				<<<EOF
+				define('CONTAO_MANAGEMENT_API_RSA_REMOTE_PUBLIC_KEY', $publicKey);
 
 EOF
 			);
 		}
 
 		$contaoPath = var_export('/' . $contaoPath, true);
-		fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
+		fwrite(
+			$buffer,
+			<<<EOF
+			define('CONTAO_MANAGEMENT_API_CONTAO_PATH', realpath(dirname(__FILE__) . $contaoPath));
 
 EOF
 		);
@@ -307,7 +315,7 @@ EOF
 			$log = var_export('/' . $log, true);
 
 			$logLevel = strtoupper($logLevel);
-			$class = new \ReflectionClass('\Monolog\Logger');
+			$class    = new \ReflectionClass('\Monolog\Logger');
 			if ($class->hasConstant($logLevel)) {
 				$logLevel = $class->getConstant($logLevel);
 			}
@@ -315,8 +323,10 @@ EOF
 				$logLevel = (int) $logLevel;
 			}
 
-			fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . $log);
+			fwrite(
+				$buffer,
+				<<<EOF
+				define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . $log);
 define('CONTAO_MANAGEMENT_API_LOG_LEVEL', $logLevel);
 
 EOF
@@ -324,8 +334,10 @@ EOF
 
 			if ($logName != 'contao-management-api') {
 				$logName = var_export($logName, true);
-				fwrite($buffer, <<<EOF
-define('CONTAO_MANAGEMENT_API_LOG_NAME', $logName);
+				fwrite(
+					$buffer,
+					<<<EOF
+					define('CONTAO_MANAGEMENT_API_LOG_NAME', $logName);
 
 EOF
 				);
@@ -483,12 +495,12 @@ EOF
 
 		$uses = array();
 		if (
-			preg_match_all(
-				'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
-				$content,
-				$matches,
-				PREG_SET_ORDER
-			)
+		preg_match_all(
+			'#\\n\\s*use\s+([\w\\\\]+)(?:\s+as\s+([^;]))?#i',
+			$content,
+			$matches,
+			PREG_SET_ORDER
+		)
 		) {
 			foreach ($matches as $use) {
 				$useClass = static::normaliseClassName($use[1]);
@@ -527,12 +539,12 @@ EOF
 
 		// search instantiations and static calls
 		if (
-			preg_match_all(
-				'#new ([\\\\\w]+)\(|([\\\\\w]+)::#',
-				$content,
-				$matches,
-				PREG_SET_ORDER
-			)
+		preg_match_all(
+			'#new ([\\\\\w]+)\(|([\\\\\w]+)::#',
+			$content,
+			$matches,
+			PREG_SET_ORDER
+		)
 		) {
 			foreach ($matches as $instantiation) {
 				$instantiationClass = isset($instantiation[2]) ? $instantiation[2] : $instantiation[1];

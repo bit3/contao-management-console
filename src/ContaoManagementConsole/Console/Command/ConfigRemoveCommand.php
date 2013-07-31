@@ -31,10 +31,10 @@ class ConfigRemoveCommand extends AbstractCommand
 			->setName('config:remove')
 			->setDescription('Remove a config entry.')
 			->addArgument(
-			'key',
-			InputArgument::REQUIRED,
-			'The config entry key name.'
-		);
+				'key',
+				InputArgument::REQUIRED,
+				'The config entry key name.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

@@ -54,7 +54,7 @@ class UserInfoCommand extends AbstractCommand
 
 		$this->outputErrors($result, $output);
 
-		$users  = $result->users;
+		$users = $result->users;
 		$groups = $result->groups;
 
 		$output->writeln('<info>Users</info>');
@@ -87,7 +87,7 @@ class UserInfoCommand extends AbstractCommand
 						$groupNames[] = $groups->$groupId->name;
 					}
 				}
-				$output->writeln(str_pad('', $paddings['id']+6) . ' member of [' . implode(', ', $groupNames) . ']');
+				$output->writeln(str_pad('', $paddings['id'] + 6) . ' member of [' . implode(', ', $groupNames) . ']');
 			}
 		}
 
@@ -107,7 +107,9 @@ class UserInfoCommand extends AbstractCommand
 
 			$output->writeln($line);
 
-			$output->writeln(str_pad('', $paddings['id']+6) . ' has access to [' . implode(', ', $group->modules) . ']');
+			$output->writeln(
+				str_pad('', $paddings['id'] + 6) . ' has access to [' . implode(', ', $group->modules) . ']'
+			);
 		}
 	}
 }

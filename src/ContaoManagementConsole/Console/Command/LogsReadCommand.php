@@ -31,24 +31,24 @@ class LogsReadCommand extends AbstractCommand
 			->setName('logs:read')
 			->setDescription('Read lines from a log file.')
 			->addArgument(
-			'log-file',
-			InputArgument::REQUIRED,
-			'Name of the log file to read.'
-		)
+				'log-file',
+				InputArgument::REQUIRED,
+				'Name of the log file to read.'
+			)
 			->addOption(
-			'lines',
-			'l',
-			InputOption::VALUE_OPTIONAL,
-			'Number of lines to read from the END of log file. Use negative number to read all lines.',
-			100
-		)
+				'lines',
+				'l',
+				InputOption::VALUE_OPTIONAL,
+				'Number of lines to read from the END of log file. Use negative number to read all lines.',
+				100
+			)
 			->addOption(
-			'offset',
-			'o',
-			InputOption::VALUE_OPTIONAL,
-			'Skip number of lines.',
-			0
-		);
+				'offset',
+				'o',
+				InputOption::VALUE_OPTIONAL,
+				'Skip number of lines.',
+				0
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

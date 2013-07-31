@@ -84,10 +84,10 @@ class UserCommands extends AbstractCommands
 			$this->errors[] = 'Could not detect Contao version!';
 		}
 		else if ($this->prepareDatabaseConnection()) {
-				$stmt = $this->dbConnection->prepare(
-					'SELECT id, username FROM tl_user WHERE id=:identifier OR username=:identifier OR email=:identifier'
-				);
-				$stmt->bindParam(':identifier', $userIdentifier);
+			$stmt = $this->dbConnection->prepare(
+				'SELECT id, username FROM tl_user WHERE id=:identifier OR username=:identifier OR email=:identifier'
+			);
+			$stmt->bindParam(':identifier', $userIdentifier);
 
 			if (!$stmt->execute() || !$stmt->rowCount()) {
 				$this->errors[] = sprintf(
@@ -101,30 +101,26 @@ class UserCommands extends AbstractCommands
 				$hash = null;
 
 				if (version_compare($contaoVersion, '3', '>=')) {
-					if (CRYPT_SHA512 == 1)
-					{
+					if (CRYPT_SHA512 == 1) {
 						$hash = crypt($password, '$6$' . md5(uniqid(mt_rand(), true)) . '$');
 					}
-					elseif (CRYPT_SHA256 == 1)
-					{
+					elseif (CRYPT_SHA256 == 1) {
 						$hash = crypt($password, '$5$' . md5(uniqid(mt_rand(), true)) . '$');
 					}
-					elseif (CRYPT_BLOWFISH == 1)
-					{
+					elseif (CRYPT_BLOWFISH == 1) {
 						$hash = crypt($password, '$2a$07$' . md5(uniqid(mt_rand(), true)) . '$');
 					}
-					else
-					{
+					else {
 						$this->errors[] = 'Security violation: none of the required crypt() algorithms is available';
 					}
 				}
 				else if (version_compare($contaoVersion, '2.11', '>=')) {
-						$salt = substr(
-							md5(uniqid(mt_rand(), true)),
-							0,
-							23
-						);
-						$hash = sha1($salt . $password) . ':' . $salt;
+					$salt = substr(
+						md5(uniqid(mt_rand(), true)),
+						0,
+						23
+					);
+					$hash = sha1($salt . $password) . ':' . $salt;
 				}
 				else {
 					$this->errors[] = sprintf(

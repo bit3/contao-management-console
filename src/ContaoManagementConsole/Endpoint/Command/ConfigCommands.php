@@ -187,8 +187,8 @@ class ConfigCommands extends AbstractCommands
 				foreach ($modules as $module) {
 					$skipFile = $this->contaoInstallation->getFile('system/modules/' . $module . '/.skip');
 					if (!$skipFile->exists() && $skipFile
-						->getParent()
-						->isDirectory()
+							->getParent()
+							->isDirectory()
 					) {
 						$skipFile->createFile();
 					}

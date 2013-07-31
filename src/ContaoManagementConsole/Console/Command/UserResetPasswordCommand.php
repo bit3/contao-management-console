@@ -34,17 +34,17 @@ class UserResetPasswordCommand extends AbstractCommand
 			->setName('user:reset-password')
 			->setDescription('Reset the password of a backend user.')
 			->addOption(
-			'user',
-			'u',
-			InputOption::VALUE_OPTIONAL,
-			'The id, username or email of the user.'
-		)
+				'user',
+				'u',
+				InputOption::VALUE_OPTIONAL,
+				'The id, username or email of the user.'
+			)
 			->addOption(
-			'password',
-			'p',
-			InputOption::VALUE_OPTIONAL,
-			'The new password for the user.'
-		);
+				'password',
+				'p',
+				InputOption::VALUE_OPTIONAL,
+				'The new password for the user.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)

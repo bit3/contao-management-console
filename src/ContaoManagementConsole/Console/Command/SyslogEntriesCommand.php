@@ -34,74 +34,74 @@ class SyslogEntriesCommand extends AbstractCommand
 			->setName('syslog:entries')
 			->setDescription('Fetch syslog records.')
 			->addOption(
-			'day',
-			'd',
-			InputOption::VALUE_OPTIONAL,
-			'Fetch records on day, possible values: a datetime string or timestamp.'
-		)
+				'day',
+				'd',
+				InputOption::VALUE_OPTIONAL,
+				'Fetch records on day, possible values: a datetime string or timestamp.'
+			)
 			->addOption(
-			'since',
-			's',
-			InputOption::VALUE_OPTIONAL,
-			'Fetch records since date, possible values: a datetime string or timestamp.'
-		)
+				'since',
+				's',
+				InputOption::VALUE_OPTIONAL,
+				'Fetch records since date, possible values: a datetime string or timestamp.'
+			)
 			->addOption(
-			'until',
-			't',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records until date, possible values: a datetime string or timestamp.'
-		)
+				'until',
+				't',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records until date, possible values: a datetime string or timestamp.'
+			)
 			->addOption(
-			'source',
-			'e',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records by log source, possible values: [FE, BE]'
-		)
+				'source',
+				'e',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records by log source, possible values: [FE, BE]'
+			)
 			->addOption(
-			'action',
-			'a',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records by log action, possible values: [GENERAL, ACCESS, CRON, CONFIGURATION, REPOSITORY, ..]'
-		)
+				'action',
+				'a',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records by log action, possible values: [GENERAL, ACCESS, CRON, CONFIGURATION, REPOSITORY, ..]'
+			)
 			->addOption(
-			'username',
-			'u',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records by log username, possible values: a valid backend user username.'
-		)
+				'username',
+				'u',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records by log username, possible values: a valid backend user username.'
+			)
 			->addOption(
-			'func',
-			'f',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records by log function, possible values: a function name'
-		)
+				'func',
+				'f',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records by log function, possible values: a function name'
+			)
 			->addOption(
-			'ip',
-			'i',
-			InputOption::VALUE_OPTIONAL,
-			'Filter records by log ip, possible values: a valid ip address'
-		)
+				'ip',
+				'i',
+				InputOption::VALUE_OPTIONAL,
+				'Filter records by log ip, possible values: a valid ip address'
+			)
 			->addOption(
-			'limit',
-			'l',
-			InputOption::VALUE_OPTIONAL,
-			'Limit returned record count.',
-			100
-		)
+				'limit',
+				'l',
+				InputOption::VALUE_OPTIONAL,
+				'Limit returned record count.',
+				100
+			)
 			->addOption(
-			'offset',
-			'o',
-			InputOption::VALUE_OPTIONAL,
-			'Skip records.',
-			0
-		)
+				'offset',
+				'o',
+				InputOption::VALUE_OPTIONAL,
+				'Skip records.',
+				0
+			)
 			->addOption(
-			'columns',
-			'c',
-			InputOption::VALUE_OPTIONAL,
-			'Shown columns.',
-			'id,tstamp,source,action,username,text,func,ip'
-		);
+				'columns',
+				'c',
+				InputOption::VALUE_OPTIONAL,
+				'Shown columns.',
+				'id,tstamp,source,action,username,text,func,ip'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
@@ -210,7 +210,7 @@ class SyslogEntriesCommand extends AbstractCommand
 
 			foreach ($syslog as $row) {
 				$firstColumn = true;
-				$line = '';
+				$line        = '';
 				foreach ($fields as $field) {
 					if ($firstColumn) {
 						$firstColumn = false;
@@ -221,7 +221,10 @@ class SyslogEntriesCommand extends AbstractCommand
 					$line .= str_pad($row->$field, $padding[$field]);
 				}
 				$style = strtolower($row->action);
-				if ($output->getFormatter()->hasStyle($style)) {
+				if ($output
+					->getFormatter()
+					->hasStyle($style)
+				) {
 					$line = sprintf(
 						'<%s>%s</%s>',
 						$style,

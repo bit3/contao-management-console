@@ -16,7 +16,8 @@
 
 namespace ContaoManagementConsole;
 
-class Settings {
+class Settings
+{
 	/**
 	 * Path to the contao installation.
 	 *
@@ -36,7 +37,7 @@ class Settings {
 
 	function __construct()
 	{
-		$this->path = getcwd();
+		$this->path               = getcwd();
 		$this->rsaLocalPrivateKey = null;
 		$this->rsaRemotePublicKey = null;
 	}

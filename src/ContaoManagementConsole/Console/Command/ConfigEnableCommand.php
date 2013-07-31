@@ -34,10 +34,10 @@ class ConfigEnableCommand extends AbstractCommand
 			->setName('config:enable')
 			->setDescription('Enable modules.')
 			->addArgument(
-			'modules',
-			InputArgument::IS_ARRAY,
-			'List of modules to enable.'
-		);
+				'modules',
+				InputArgument::IS_ARRAY,
+				'List of modules to enable.'
+			);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
