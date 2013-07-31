@@ -1,5 +1,19 @@
 <?php
 
+/**
+ * Management Console for Contao Open Source CMS
+ *
+ * Copyright (C) 2013 Tristan Lins
+ *
+ * PHP version 5
+ *
+ * @copyright  bit3 UG 2013
+ * @author     Tristan Lins <tristan.lins@bit3.de>
+ * @package    contao-management-console
+ * @license    LGPL-3.0+
+ * @filesource
+ */
+
 chdir(dirname(__FILE__));
 
 define('CONTAO_MANAGEMENT_API_LOG', dirname(__FILE__) . '/' . basename(__FILE__, '.php') . '.log');
