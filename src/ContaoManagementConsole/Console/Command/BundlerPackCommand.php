@@ -213,7 +213,7 @@ class BundlerPackCommand extends Command
 		if (file_exists($filename)) {
 			unlink($filename);
 		}
-		
+
 		$this->phar = new \Phar($filename);
 		$this->phar->setSignatureAlgorithm(\Phar::SHA1);
 
