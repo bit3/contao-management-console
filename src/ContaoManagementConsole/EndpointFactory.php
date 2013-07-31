@@ -43,7 +43,6 @@ class EndpointFactory
 		if (empty($url['scheme']) || $url['scheme'] == 'file') {
 			$endpoint         = new \stdClass();
 			$endpoint->status = new StatusCommands($settings);
-			$endpoint->syslog = new SyslogCommands($settings);
 			$endpoint->user   = new UserCommands($settings);
 		}
 
