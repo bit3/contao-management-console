@@ -28,8 +28,6 @@ else {
 
 use Symfony\Component\Console\Application;
 use ContaoManagementConsole\Console\Command\BundlerPackCommand;
-use ContaoManagementConsole\Console\Command\LogsFilesCommand;
-use ContaoManagementConsole\Console\Command\LogsReadCommand;
 use ContaoManagementConsole\Console\Command\StatusCommand;
 use ContaoManagementConsole\Console\Command\SyslogEntriesCommand;
 use ContaoManagementConsole\Console\Command\UserInfoCommand;
@@ -37,8 +35,6 @@ use ContaoManagementConsole\Console\Command\UserResetPasswordCommand;
 
 $application = new Application();
 $application->add(new BundlerPackCommand);
-$application->add(new LogsFilesCommand);
-$application->add(new LogsReadCommand);
 $application->add(new StatusCommand);
 $application->add(new SyslogEntriesCommand);
 $application->add(new UserInfoCommand);
